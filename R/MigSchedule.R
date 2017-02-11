@@ -33,14 +33,16 @@ stop(paste0("MigSchedule requires MCMC to have breaks == day, currently MCMC has
 Dates <- MCMC$mcmc[[1]]$time
 
 ks <- unclass(cut(if (MCMC$type == "intermediate") Dates[-length(Dates)] else Dates,
-            breaks = MCMC$breaks,
-			include.lowest = MCMC$include.lowest,
-            right = MCMC$right))
+             breaks = MCMC$breaks,
+			       include.lowest = MCMC$include.lowest,
+             right = MCMC$right))
 
-#k <- which(ks %in% k)
+Date <- levels(ks)
+
+ks <- unique(ks)
 
 # Get the dates from the MCMC object
-Date <- levels(ks)
+
 
 if(any(diff(ks)>1)){
 cat("\n Warning: Dates are not sequential \n")
@@ -66,7 +68,7 @@ if(progress){
 setTxtProgressBar(pb, i)
 }
 
-days[[i]]<-slice(MCMC,k = i)
+days[[i]]<-slice(MCMC,k = ks[i])
 
 if(class(days[[i]]) == "RasterLayer"){
 
@@ -211,7 +213,7 @@ for(i in 1:length(a)){
 if(i == 1){
 
 movements[[i]]<- slice(MCMC,
-                 k = c(1:which(Date == lonlat$Date[a[i]])))
+                       k = c(1:which(Date == lonlat$Date[a[i]])))
 
 if(!is.na(prob)){
 movements[[i]][movements[[i]]< quantile(movements[[i]],probs = prob)] <- NA
@@ -219,8 +221,8 @@ movements[[i]][movements[[i]]< quantile(movements[[i]],probs = prob)] <- NA
 
 movements[[i]] <- movements[[i]]/cellStats(movements[[i]],max, na.rm = TRUE)
 
-arrival.date[i] <- lonlat$Date[1]
-depart.date[i] <- lonlat$Date[a[i]]
+arrival.date[i] <- substr(sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a[i]])))[1],start = 1, stop = 10)
+depart.date[i] <- substr(sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a[i]])))[2],start = 1, stop = 10)
 }
 if(i >= 2){
 movements[[i]] <- slice(MCMC,
@@ -233,14 +235,14 @@ if(!is.na(prob)){
 
 movements[[i]] <- movements[[i]]/cellStats(movements[[i]],max, na.rm = TRUE)
 
-arrival.date[i] <- lonlat$Date[a[i-1]]
-depart.date[i] <- lonlat$Date[a[i]]
+arrival.date[i] <- substr(sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a[i]])))[1],start = 1, stop = 10)
+depart.date[i] <- substr(sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a[i]])))[2],start = 1, stop = 10)
 }
 }
 
 movements<-raster::stack(movements)
 
-names(movements) <- paste0(Date[arrival.date],"_",Date[depart.date])
+names(movements) <- paste0(arrival.date,"_",depart.date)
 
 for(i in 1:nlayers(movements)){
 v[[i]]<-rasterToPoints(movements[[i]])
@@ -256,8 +258,8 @@ distance.km <- sp::spDists(cbind(mean.stationary.lon,mean.stationary.lat),
                            longlat = TRUE,
 						   segments = TRUE)
 
-movementResult <- data.frame(arrival.date = Date[arrival.date],
-                             departure.date = Date[depart.date],
+movementResult <- data.frame(arrival.date = arrival.date,
+                             departure.date = depart.date,
                              mean.lon = mean.stationary.lon,
                              lon.LCI = LCI.stat.lon,
                              lon.UCI = UCI.stat.lon,
