@@ -277,11 +277,11 @@ data(wrld_simpl)
 par(mfrow = c(2,2),mar = c(1,1,3,1))
 
 # Plot Daily Location estimates #
-plot(raster::SpatialPoints(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
+plot(sp::SpatialPoints(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
 	 pch = 19,
 	 main = "Daily Locations")
 plot(wrld_simpl,add = TRUE,col = "gray88")
-plot(raster::SpatialPoints(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
+plot(sp::SpatialPoints(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
      pch = 19,
 	 add = TRUE)
 plot(raster::spLines(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
@@ -291,7 +291,7 @@ box()
 # Plot Stop-over locations #
 cols <- bpy.colors(nrow(movementResult))
 
-plot(raster::SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat)),
+plot(sp::SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat)),
      pch = 19,
 	 main = "Stop-over sites")
 plot(wrld_simpl,
@@ -305,7 +305,7 @@ plot(movements[[i]],
 	 legend = FALSE)
 }
 
-plot(raster::SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat)),
+plot(sp::SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat)),
      pch = 19,
 	 col = cols,
 	 add = TRUE)
