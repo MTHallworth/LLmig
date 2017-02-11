@@ -1,0 +1,11 @@
+Package: mth
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Author: M.T. Hallworth
+Maintainer: M.T. Hallworth <mhallworth@gmail.com>
+Description: MTH's personal geolocator package
+License: 
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 5.0.1
