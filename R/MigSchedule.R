@@ -68,8 +68,8 @@ setTxtProgressBar(pb, i)
 
 days[[i]]<-slice(MCMC,k = i)
 
+if(class(days[[i]] == "RasterLayer")){
 days[[i]][days[[i]]< quantile(days[[i]],probs = prob)]<-NA
-
 days2pts[[i]]<-rasterToPoints(days[[i]])
 
 lon[i]<-mean(days2pts[[i]][,1],
@@ -99,6 +99,15 @@ lat.UCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,2],
                                   probs = 0.975,
 								  weights = days2pts[[i]][,3],
 								  na.rm = TRUE)
+}
+else{
+  lon[i] <- NA
+  lon.LCI[i] <- NA
+  lon.UCI[i] <- NA
+  lat[i] <- NA
+  lat.LCI[i] <- NA
+  lat.UCI[i] <- NA
+}
 }
 
 if(progress){
