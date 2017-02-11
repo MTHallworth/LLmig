@@ -37,9 +37,14 @@ ks <- unclass(cut(if (MCMC$type == "intermediate") Dates[-length(Dates)] else Da
 			       include.lowest = MCMC$include.lowest,
              right = MCMC$right))
 
+# get dates before they're removed
 Date <- levels(ks)
 
+# keep only the unique days
 ks <- unique(ks)
+
+# Save the unique days - date
+Date <- Date[ks]
 
 # Get the dates from the MCMC object
 
@@ -48,7 +53,7 @@ if(any(diff(ks)>1)){
 cat("\n Warning: Dates are not sequential \n")
 }
 
-num.days <- length(Date)
+num.days <- length(ks)
 
 days <- days2pts <- vector('list',num.days)
 
@@ -235,8 +240,12 @@ if(!is.na(prob)){
 
 movements[[i]] <- movements[[i]]/cellStats(movements[[i]],max, na.rm = TRUE)
 
-arrival.date[i] <- substr(SGAT::sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a[i]])))[1],start = 1, stop = 10)
-depart.date[i] <- substr(SGAT::sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a[i]])))[2],start = 1, stop = 10)
+arrival.date[i] <- substr(SGAT::sliceInterval(MCMC,
+                          k = c(which(Date == lonlat$Date[a[i-1]]):
+                                which(Date == lonlat$Date[a[i]])))[1],start = 1, stop = 10)
+depart.date[i] <- substr(SGAT::sliceInterval(MCMC,
+                         k = c(which(Date == lonlat$Date[a[i-1]]):
+                               which(Date == lonlat$Date[a[i]])))[2],start = 1, stop = 10)
 }
 }
 
