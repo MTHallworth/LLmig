@@ -56,7 +56,9 @@ cat("Calculating mean weighted daily location for", num.days,"days this may take
 
 # create progress bar
 
+if(progress){
 pb <- txtProgressBar(min = 0, max = num.days, style = 3)
+}
 
 for(i in 1:num.days){
 
