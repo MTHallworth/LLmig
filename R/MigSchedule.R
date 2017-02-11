@@ -321,7 +321,7 @@ polygon(x=c(lonlat$Date,rev(lonlat$Date)),
         col="gray")
 points(lonlat$Date,lonlat$Mean.lat,type = "l")
 axis(2,las=2)
-dayplot <- seq(1,length(lonlat$Date),10)
+dayplot <- seq(1,length(lonlat$Date),30)
 axis(1, at = lonlat$Date[dayplot], labels = lonlat$Date[dayplot])
 
 
@@ -329,13 +329,17 @@ plot(lonlat$Mean.long ~ lonlat$Date,
      type = "l",
 	 ylab = "Weighted Mean Longitude",
 	 xlab = "Date",
-	 yaxt = "n")
+	 yaxt = "n",
+	 xaxt = "n")
 polygon(x=c(lonlat$Date,rev(lonlat$Date)),
         y=c(lonlat$lon.LCI,rev(lonlat$lon.UCI)),
         border="gray",
         col="gray")
 points(lonlat$Date,lonlat$Mean.long,type="l")
 axis(2,las=2)
+dayplot <- seq(1,length(lonlat$Date),30)
+axis(1, at = lonlat$Date[dayplot], labels = lonlat$Date[dayplot])
+
 }
 
 cat("\n Done \n")
