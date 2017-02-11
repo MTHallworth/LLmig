@@ -119,7 +119,9 @@ close(pb)
 cat("\n Calculating distance between each location .... \n")
 
 if(any(is.na(lon))){
-stop(cat("NAs found in location data - expand the grid in MCMC object to avoid NAs"))
+cat("Warning: NAs found in location data - expand the grid in MCMC object to avoid NAs")
+lon <- zoo::na.approx(lon)
+lat <- zoo::na.approx(lat)
 }
 
 lonlat<-data.frame(Date = Date,
@@ -131,9 +133,10 @@ lonlat<-data.frame(Date = Date,
                    lat.UCI = lat.UCI,
                    Distance.traveled = rep(NA,length(Date)))
 
+
 distances <- sp::spDists(cbind(lonlat$Mean.long,lonlat$Mean.lat),
                          longlat = TRUE,
-				         segments = TRUE)
+				                 segments = TRUE)
 
 lonlat$Distance.traveled <- c(NA,distances)
 
