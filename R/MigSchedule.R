@@ -68,8 +68,7 @@ setTxtProgressBar(pb, i)
 
 days[[i]]<-slice(MCMC,k = i)
 
-if(class(days[[i]] == "RasterLayer")){
-cat("\n Warning: ", Date[i]," not currently in data set - NA added \n")
+if(class(days[[i]]) == "RasterLayer"){
 
 days[[i]][days[[i]]< quantile(days[[i]],probs = prob)]<-NA
 days2pts[[i]]<-rasterToPoints(days[[i]])
@@ -103,6 +102,7 @@ lat.UCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,2],
 								  na.rm = TRUE)
 }
 else{
+cat("\n Warning: ", Date[i]," not currently in data set - NA added \n")
   lon[i] <- NA
   lon.LCI[i] <- NA
   lon.UCI[i] <- NA
