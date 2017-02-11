@@ -68,12 +68,12 @@ if(progress){
 setTxtProgressBar(pb, i)
 }
 
-days[[i]]<-slice(MCMC,k = ks[i])
+days[[i]]<-SGAT::slice(MCMC,k = ks[i])
 
 if(class(days[[i]]) == "RasterLayer"){
 
 days[[i]][days[[i]]< quantile(days[[i]],probs = prob)]<-NA
-days2pts[[i]]<-rasterToPoints(days[[i]])
+days2pts[[i]]<-raster::rasterToPoints(days[[i]])
 
 lon[i]<-mean(days2pts[[i]][,1],
              weight = days2pts[[i]][,3],
@@ -212,7 +212,7 @@ LCI.stat.lon <- UCI.stat.lon <- LCI.stat.lat <- UCI.stat.lat <- rep(NA,length(a)
 for(i in 1:length(a)){
 if(i == 1){
 
-movements[[i]]<- slice(MCMC,
+movements[[i]]<- SGAT::slice(MCMC,
                        k = c(1:which(Date == lonlat$Date[a[i]])))
 
 if(!is.na(prob)){
@@ -225,7 +225,7 @@ arrival.date[i] <- substr(sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a
 depart.date[i] <- substr(sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a[i]])))[2],start = 1, stop = 10)
 }
 if(i >= 2){
-movements[[i]] <- slice(MCMC,
+movements[[i]] <- SGAT::slice(MCMC,
                   k = c(which(Date == lonlat$Date[a[i-1]]):
                         which(Date == lonlat$Date[a[i]])))
 
@@ -235,8 +235,8 @@ if(!is.na(prob)){
 
 movements[[i]] <- movements[[i]]/cellStats(movements[[i]],max, na.rm = TRUE)
 
-arrival.date[i] <- substr(sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a[i]])))[1],start = 1, stop = 10)
-depart.date[i] <- substr(sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a[i]])))[2],start = 1, stop = 10)
+arrival.date[i] <- substr(SGAT::sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a[i]])))[1],start = 1, stop = 10)
+depart.date[i] <- substr(SGAT::sliceInterval(MCMC,k = c(1:which(Date == lonlat$Date[a[i]])))[2],start = 1, stop = 10)
 }
 }
 
@@ -277,21 +277,21 @@ data(wrld_simpl)
 par(mfrow = c(2,2),mar = c(1,1,3,1))
 
 # Plot Daily Location estimates #
-plot(SpatialPoints(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
+plot(raster::SpatialPoints(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
 	 pch = 19,
 	 main = "Daily Locations")
 plot(wrld_simpl,add = TRUE,col = "gray88")
-plot(SpatialPoints(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
+plot(raster::SpatialPoints(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
      pch = 19,
 	 add = TRUE)
-plot(spLines(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
+plot(raster::spLines(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
      add = TRUE)
 box()
 
 # Plot Stop-over locations #
 cols <- bpy.colors(nrow(movementResult))
 
-plot(SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat)),
+plot(raster::SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat)),
      pch = 19,
 	 main = "Stop-over sites")
 plot(wrld_simpl,
@@ -305,12 +305,12 @@ plot(movements[[i]],
 	 legend = FALSE)
 }
 
-plot(SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat)),
+plot(raster::SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat)),
      pch = 19,
 	 col = cols,
 	 add = TRUE)
 
-plot(spLines(cbind(mean.stationary.lon,mean.stationary.lat)),
+plot(raster::spLines(cbind(mean.stationary.lon,mean.stationary.lat)),
      add = TRUE)
 plot(wrld_simpl,add = TRUE)
 
