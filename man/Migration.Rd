@@ -4,9 +4,9 @@
 \alias{Migration}
 \title{Determine migratory schedule from archival light-level geolocator data.}
 \usage{
-Migration(MCMC, prob = 0.95, known.breed = NULL, known.winter = NULL,
-  rm.lat.equinox = FALSE, days.omit = 5, progress = TRUE, plot = TRUE,
-  plot.legend = TRUE, latAllow = c(0, 10))
+Migration(MCMC, prob = 0.95, known.stationary1 = NULL,
+  known.stationary2 = NULL, rm.lat.equinox = FALSE, days.omit = 5,
+  progress = TRUE, plot = TRUE, plot.legend = TRUE, latAllow = c(0, 10))
 }
 \arguments{
 \item{MCMC}{a slices object.}
