@@ -173,7 +173,19 @@ known.breeding <- seq.Date(from = as.Date(known.breed[1L]),
 
 rm.known.breed <- which(as.Date(Date) %in% known.breeding)
 
+# Make raster for winter dates
+breed.raster <- SGAT::slice(MCMC, k = rm.known.breed)
+
+# create 95% credible interval
+breed.raster[winter.raster < quantile(breed.raster, probs = 0.95)] <- NA
+
 a <- a[!a%in%rm.known.breed]
+
+b.extract <- raster::extract(breed.raster, # raster
+                             sp::SpatialPoints(cbind(lonlat$Mean.long[a],lonlat$Mean.lat[a])), #spatialpoints
+                             method = "simple")
+
+a <- a[which(is.na(b.extract[,3]))]
 }
 
 if(!is.null(known.winter)){
@@ -182,6 +194,18 @@ known.wintering <- seq.Date(from = as.Date(known.winter[1L]),
                            by = "day")
 
 rm.known.winter <- which(as.Date(Date) %in% known.wintering)
+
+# Make raster for winter dates
+winter.raster <- SGAT::slice(MCMC, k = rm.known.winter)
+
+# create 95% credible interval
+winter.raster[winter.raster < quantile(winter.raster, probs = 0.95)] <- NA
+
+w.extract <- raster::extract(winter.raster, # raster
+                             sp::SpatialPoints(cbind(lonlat$Mean.long[a],lonlat$Mean.lat[a])), #spatialpoints
+                             method = "simple")
+
+a <- a[which(is.na(w.extract[,3]))]
 
 a <- a[!a%in%rm.known.winter]
 
