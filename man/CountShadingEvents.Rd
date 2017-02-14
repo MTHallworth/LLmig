@@ -5,7 +5,7 @@
 \title{Count the number of shading events between sunrise and sunset.}
 \usage{
 CountShadingEvents(lightdata = lightdata, threshold = 1, MCMCresult = NA,
-  RiseToSet = TRUE, plot = TRUE)
+  plot = TRUE)
 }
 \arguments{
 \item{lightdata}{an object with Date and Light.}
@@ -13,8 +13,6 @@ CountShadingEvents(lightdata = lightdata, threshold = 1, MCMCresult = NA,
 \item{\code{threshold}}{threshold value}
 
 \item{\code{MCMCresult}}{either MCMC result from Estelle model or slices object}
-
-\item{\code{RiseToSet}}{logical if TRUE counts from sunrise to sunset}
 
 \item{\code{plot}}{logical plot results}
 }
