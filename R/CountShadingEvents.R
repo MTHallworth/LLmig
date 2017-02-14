@@ -24,18 +24,15 @@ nRise <- length(Rises)
 nSets <- length(Sets)
 
 shadesEvents <- array(NA,c(min(c(nRise,nSets)),2))
+
 colnames(shadesEvents)<-c("OrdinalDay","Shading_Events")
 
 shadesEvents[,1] <- format(Rises,"%j")[1:nrow(shadesEvents)]
-if(nRise > nSets){
+
 for(i in 1:nrow(shadesEvents)){
-shadesEvents[i,2] <- as.numeric(length(which(lightdata$Light[which(lightdata$Date > Rises[i] & lightdata$Date < Sets[i])] < threshold)))
-}
-}
-else{
-for(i in 1:nrow(shadesEvents)){
-shadesEvents[i,2] <- as.numeric(length(which(lightdata$Light[which(lightdata$Date > Rises[i+1] & lightdata$Date < Sets[i])] < threshold)))
-}
+shadesEvents[i,2] <- suppressWarnings(
+  as.numeric(length(which(lightdata$Light[which(lightdata$Date > Rises[i] & lightdata$Date < Sets[min(which(Sets > Rises[i]))])] < threshold)))
+  )
 }
 
 if(plot){
@@ -48,13 +45,13 @@ axis(1,label = as.Date(Rises[seq(1,nRise,10)]), at = seq(1,nRise,10),las = 2,cex
 }
 
 MoreRises <- data.frame(OrdinalDate = shadesEvents[,1],
-                        Rise = Rises[1:nrow(shadesEvents)],
-                        Set = Sets,
+                        #Rise = Rises[1:nrow(shadesEvents)],
+                        #Set = Sets,
                         ShadingEvents = shadesEvents[,2])
 if(nRise < nSets){
 MoreSets <- data.frame(OrdinalDate = shadesEvents[,1],
-                       Rise = Rises,
-                       Set = Sets[1:nrow(shadesEvents)],
+                       #Rise = Rises,
+                       #Set = Sets[1:nrow(shadesEvents)],
                        ShadingEvents = shadesEvents[,2])
 }
 
