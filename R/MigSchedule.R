@@ -167,25 +167,27 @@ a <- unique(sort(c(lon.1,lat.1)))
 a <- a[!is.na(a)]
 
 if(!is.null(known.breed)){
-known.breeding <- seq.Date(from = as.Date(known.breed[1L]),
-                           to = as.Date(known.breed[2L]),
-                           by = "day")
+  known.breeding <- seq.Date(from = as.Date(known.breed[1L]),
+                             to = as.Date(known.breed[2L]),
+                             by = "day")
 
-rm.known.breed <- which(as.Date(Date) %in% known.breeding)
+  rm.known.breed <- which(as.Date(Date) %in% known.breeding)
 
-# Make raster for winter dates
-breedRaster <- SGAT::slice(MCMC, k = rm.known.breed)
+  if(!is.null(nrow(rm.known.breed))){
+    # Make raster for winter dates
+    breedRaster <- SGAT::slice(MCMC, k = rm.known.breed)
 
-# create 95% credible interval
-breedRaster[breedRaster < quantile(breedRaster, probs = 0.95)] <- NA
+    # create 95% credible interval
+    breedRaster[breedRaster < quantile(breedRaster, probs = 0.95)] <- NA
 
-a <- a[!a%in%rm.known.breed]
+    a <- a[!a%in%rm.known.breed]
 
-b.extract <- raster::extract(breedRaster, # raster
-                             sp::SpatialPoints(cbind(lonlat$Mean.long[a],lonlat$Mean.lat[a])), #spatialpoints
-                             method = "simple")
+    b.extract <- raster::extract(breedRaster, # raster
+                                 sp::SpatialPoints(cbind(lonlat$Mean.long[a],lonlat$Mean.lat[a])), #spatialpoints
+                                 method = "simple")
 
-a <- a[which(is.na(b.extract))]
+    a <- a[which(is.na(b.extract))]
+  } else {cat("\n known.breeding dates are not in the data \n")}
 }
 
 if(!is.null(known.winter)){
