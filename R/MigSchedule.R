@@ -361,9 +361,9 @@ if(plot == TRUE){
 cat("\n Plotting the results \n")
 library(maptools)
 data(wrld_simpl)
-layout(as.matrix(c(1,2,
-              3,3,
-              4,4), 3,2,byrow = TRUE))
+layout(matrix(c(1,2,
+                   3,3,
+                   4,4), 3,2,byrow = TRUE))
 par(mar = c(1,1,3,1))
 
 # Plot Daily Location estimates #
