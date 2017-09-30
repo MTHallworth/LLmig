@@ -193,7 +193,7 @@ if(!is.null(known.breed) & is.null(breed.rast)){
   if(is.null(known.breed) & !is.null(breed.rast)){
     if(class(breed.rast) == "RasterLayer"){
     # create 95% credible interval
-    breed.rast[breed.rast < quantile(breed.rast, probs = 0.95)] <- NA
+    breed.rast[breed.rast < quantile(breed.rast, probs = 0.75)] <- NA
 
     b.extract <- raster::extract(breed.rast, # raster
                                  sp::SpatialPoints(cbind(lonlat$Mean.long[a],lonlat$Mean.lat[a])), #spatialpoints
@@ -218,7 +218,7 @@ rm.known.winter <- which(as.Date(Date) %in% known.wintering)
 winterRaster <- SGAT::slice(MCMC, k = rm.known.winter)
 
 # create 95% credible interval
-winterRaster[winterRaster < quantile(winterRaster, probs = 0.95)] <- NA
+winterRaster[winterRaster < quantile(winterRaster, probs = 0.75)] <- NA
 
 w.extract <- raster::extract(winterRaster, # raster
                              sp::SpatialPoints(cbind(lonlat$Mean.long[a],lonlat$Mean.lat[a])), #spatialpoints
