@@ -291,7 +291,23 @@ UCI.stat.lat[i]<-Hmisc::wtd.quantile(v[[i]][,2],probs = 0.975, weights = v[[i]][
 
 distance.km <- sp::spDists(cbind(mean.stationary.lon,mean.stationary.lat),
                            longlat = TRUE,
-						   segments = TRUE)
+						               segments = TRUE)
+
+data(wrld_simpl, package = "maptools")
+state<-raster::getData('GADM', country='USA', level=1)
+
+WGS84 <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
+
+state <- sp::spTransform(state, sp::CRS(WGS84))
+
+loc <- sp::over(sp::SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat), sp::CRS(WGS84)),wrld_simpl)$NAME
+loc <- droplevels(loc)
+
+for(i in 1:length(loc)){
+win.state[i] <- ifelse(loc[i] == "United States",
+              sp::over(sp::SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat), sp::CRS(WGS84)),state)$NAME_1,
+              "NA")
+}
 
 movementResult <- data.frame(arrival.date = arrival.date,
                              departure.date = depart.date,
@@ -301,7 +317,9 @@ movementResult <- data.frame(arrival.date = arrival.date,
                              mean.lat = mean.stationary.lat,
                              lat.LCI = LCI.stat.lat,
                              lat.UCI = UCI.stat.lat,
-                             distance.km = c(NA,distance.km))
+                             distance.km = c(NA,distance.km),
+                             country = loc,
+                             state = win.state)
 
 movementResult$duration <- as.Date(movementResult$departure.date) - as.Date(movementResult$arrival.date)
 
