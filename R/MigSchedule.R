@@ -360,10 +360,7 @@ movementResult$duration <- as.Date(movementResult$departure.date) - as.Date(move
 if(plot == TRUE){
 cat("\n Plotting the results \n")
 data(wrld_simpl, package = "maptools")
-#par(mar = c(1,1,3,1))
-layout(matrix(c(1,2,
-                3,3,
-                4,4), 3,2,byrow = TRUE))
+par(mfrow = c(2,2), mar = c(1,1,3,1))
 # Plot Daily Location estimates #
 plot(sp::SpatialPoints(cbind(lonlat$Mean.lon,lonlat$Mean.lat)),
 	 pch = 19,
