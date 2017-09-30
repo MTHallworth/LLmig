@@ -18,7 +18,9 @@
 MigSchedule <- function(MCMC,
                         prob = 0.95,
 						            known.breed = NULL,
+						            breed.rast = NULL,
 						            known.winter = NULL,
+						            winter.rast = NULL,
 						            rm.lat.equinox = FALSE,
 						            days.omit = 5,
 						            progress = TRUE,
@@ -166,7 +168,7 @@ a <- unique(sort(c(lon.1,lat.1)))
 
 a <- a[!is.na(a)]
 
-if(!is.null(known.breed)){
+if(!is.null(known.breed) & is.null(breed.rast)){
   known.breeding <- seq.Date(from = as.Date(known.breed[1L]),
                              to = as.Date(known.breed[2L]),
                              by = "day")
@@ -181,16 +183,31 @@ if(!is.null(known.breed)){
     breedRaster[breedRaster < quantile(breedRaster, probs = 0.95)] <- NA
 
     a <- a[!a%in%rm.known.breed]
-
     b.extract <- raster::extract(breedRaster, # raster
                                  sp::SpatialPoints(cbind(lonlat$Mean.long[a],lonlat$Mean.lat[a])), #spatialpoints
                                  method = "simple")
 
     a <- a[which(is.na(b.extract))]
-  } else {cat("\n known.breeding dates are not in the data \n")}
+  }
 }
+  if(is.null(known.breed) & !is.null(breed.rast)){
+    if(class(breed.rast) == "RasterLayer"){
+    # create 95% credible interval
+    breed.rast[breed.rast < quantile(breed.rast, probs = 0.95)] <- NA
 
-if(!is.null(known.winter)){
+    b.extract <- raster::extract(breed.rast, # raster
+                                 sp::SpatialPoints(cbind(lonlat$Mean.long[a],lonlat$Mean.lat[a])), #spatialpoints
+                                 method = "simple")
+
+    a <- a[which(is.na(b.extract))]
+
+    }
+  } else{cat("\n breed.rast should be of class == 'RasterLayer'\n")}
+
+#  else {cat("\n known.breeding dates are not in the data \n")}
+
+
+if(!is.null(known.winter) & is.null(winter.rast)){
 known.wintering <- seq.Date(from = as.Date(known.winter[1L]),
                            to = as.Date(known.winter[2L]),
                            by = "day")
@@ -212,6 +229,21 @@ a <- a[which(is.na(w.extract))]
 a <- a[!a%in%rm.known.winter]
 
 }
+
+if(is.null(known.winter) & !is.null(winter.rast)){
+  if(class(breed.rast) == "RasterLayer"){
+    # create 95% credible interval
+    winter.rast[winter.rast < quantile(winter.rast, probs = 0.95)] <- NA
+
+    w.extract <- raster::extract(winter.rast, # raster
+                                 sp::SpatialPoints(cbind(lonlat$Mean.long[a],lonlat$Mean.lat[a])), #spatialpoints
+                                 method = "simple")
+
+    a <- a[which(is.na(w.extract))]
+
+  }
+} else{cat("\n winter.rast should be of class == 'RasterLayer'\n")}
+
 
 years <- unique(format(as.Date(Date),"%Y"))
 
