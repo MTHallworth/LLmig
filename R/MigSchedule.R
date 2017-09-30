@@ -303,6 +303,8 @@ state <- sp::spTransform(state, sp::CRS(WGS84))
 loc <- sp::over(sp::SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat), sp::CRS(WGS84)),wrld_simpl)$NAME
 loc <- droplevels(loc)
 
+win.state <- rep(NA,length(loc))
+
 for(i in 1:length(loc)){
 win.state[i] <- ifelse(loc[i] == "United States",
               sp::over(sp::SpatialPoints(cbind(mean.stationary.lon,mean.stationary.lat), sp::CRS(WGS84)),state)$NAME_1,
