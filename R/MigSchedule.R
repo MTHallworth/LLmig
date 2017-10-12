@@ -403,7 +403,7 @@ movementResult$duration <- as.Date(movementResult$departure.date) - as.Date(move
 if(plot == TRUE){
 cat("\n Plotting the results \n")
 data(wrld_simpl, package = "maptools")
-cols <- rainbow(12)
+cols <- colorRampPalette(c("green","red","blue"),alpha = 0.5)(12)
 month <- format(as.Date(Date),"%m")
 col.dat <- data.frame(color = cols,
                       month = c("01","02","03","04","05","06","07","08","09","10","11","12"))
