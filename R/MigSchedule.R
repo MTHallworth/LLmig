@@ -48,12 +48,23 @@ Date <- Date[ks]
 
 years <- unique(format(as.Date(Date),"%Y"))
 
+
 fall.equinox <- paste0(seq.Date(from = as.Date(paste0(years[1L],"-09-",16-days.omit)),
                                 to = as.Date(paste0(years[1L],"-09-",16+days.omit)), by = 1))
 
+sp.equinox <- paste0(seq.Date(from = as.Date(paste0(years[1L],"-03-",21-days.omit)),
+                              to = as.Date(paste0(years[1L],"-03-",21+days.omit)), by = 1))
 
-sp.equinox <- paste0(seq.Date(from = as.Date(paste0(years[2L],"-03-",21-days.omit)),
-                              to = as.Date(paste0(years[2L],"-03-",21+days.omit)), by = 1))
+if(length(years)>1){
+fall.equinox1 <- paste0(seq.Date(from = as.Date(paste0(years[2L],"-09-",16-days.omit)),
+                                  to = as.Date(paste0(years[2L],"-09-",16+days.omit)), by = 1))
+
+sp.equinox1 <- paste0(seq.Date(from = as.Date(paste0(years[2L],"-03-",21-days.omit)),
+                                to = as.Date(paste0(years[2L],"-03-",21+days.omit)), by = 1))
+
+fall.equinox <- c(fall.equinox,fall.equinox1)
+sp.equinox <- c(sp.equinox,sp.equinox1)
+}
 
 if(any(diff(ks)>1)){
 cat("\n Warning: Dates are not sequential \n")
