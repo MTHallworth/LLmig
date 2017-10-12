@@ -404,7 +404,7 @@ if(plot == TRUE){
 cat("\n Plotting the results \n")
 data(wrld_simpl, package = "maptools")
 cols <- rainbow(12)
-month <- format(Date,"%m")
+month <- format(as.Date(Date),"%m")
 col.dat <- data.frame(color = cols,
                       month = c("01","02","03","04","05","06","07","08","09","10","11","12"))
 
