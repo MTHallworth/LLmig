@@ -403,10 +403,18 @@ movementResult$duration <- as.Date(movementResult$departure.date) - as.Date(move
 if(plot == TRUE){
 cat("\n Plotting the results \n")
 data(wrld_simpl, package = "maptools")
+cols <- rainbow(12)
+month <- format(Date,"%m")
+col.dat <- data.frame(color = cols,
+                      month = c("01","02","03","04","05","06","07","08","09","10","11","12"))
+
+colors <- merge(data.frame(month = month),col.dat,by.x = "month", by.y = "month", all.x = TRUE)
+
 par(mfrow = c(2,2), mar = c(1,1,3,1))
 # Plot Daily Location estimates #
 plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
 	 pch = 19,
+	 col = colors$color,
 	 main = "Daily Locations")
 plot(wrld_simpl,add = TRUE,col = "gray88")
 plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
