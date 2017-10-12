@@ -423,10 +423,10 @@ plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
      pch = 19,
      col = colors$color,
 	   add = TRUE)
+box()
 par(new = TRUE, fig = c(0,0.2,0.8,1))
 pie(as.numeric(month), labels = col.dat$month, col = col.dat$color)
 
-box()
 
 # Plot Stop-over locations #
 cols <- sp::bpy.colors(nrow(movementResult))
