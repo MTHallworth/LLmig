@@ -417,11 +417,15 @@ plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
 	 col = colors$color,
 	 main = "Daily Locations")
 plot(wrld_simpl,add = TRUE,col = "gray88")
-plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
-     pch = 19,
-	 add = TRUE)
 plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
      add = TRUE)
+plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
+     pch = 19,
+     col = colors$color,
+	   add = TRUE)
+par(new = TRUE, fig = c(0,0.2,0.8,1))
+pie(as.numeric(month), labels = col.dat$month, col = col.dat$color)
+
 box()
 
 # Plot Stop-over locations #
