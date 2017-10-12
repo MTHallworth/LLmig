@@ -283,12 +283,30 @@ for(i in 1:n.stationary){
 # sequence along the stationary periods
   # if stationary.period is before logging date - change to first date
 
-if(as.character(stationary.periods[i,1]) < as.character(tmp$Date[1])){
-stationary.periods[i,1] <- as.character(tmp$Date[1])
+if(as.character(stationary.periods[i,1]) < as.character(tmp$Date[1]) &
+   as.character(stationary.periods[i,2]) %in% as.character(tmp$Date)){
+stat.periods[[i]] <- seq(from = 1,
+                         to = which(as.character(tmp$Date) == as.character(stationary.periods[i,2])),
+                         by = 1)
 }
 
-stat.periods[[i]] <- seq(which(as.character(tmp$Date) == as.character(stationary.periods[i,1])),
-                         which(as.character(tmp$Date) == as.character(stationary.periods[i,2])),by = 1)
+if(as.character(stationary.periods[i,1]) %in% as.character(tmp$Date) &
+   as.character(stationary.periods[i,2]) %in% as.character(tmp$Date)){
+stat.periods[[i]] <- seq(from = which(as.character(tmp$Date) == as.character(stationary.periods[i,1])),
+                         to = which(as.character(tmp$Date) == as.character(stationary.periods[i,2])),
+                         by = 1)
+}
+if(as.character(stationary.periods[i,1]) %in% as.character(tmp$Date) &
+   !(as.character(stationary.periods[i,2]) %in% as.character(tmp$Date))){
+    stat.periods[[i]] <- seq(from = which(as.character(tmp$Date) == as.character(stationary.periods[i,1])),
+                             to = max(which(as.character(tmp$Date) < as.character(stationary.periods[i,2]))),
+                             by = 1)
+  }
+
+
+
+
+
 
 # create raster of stationary period
 stat.rasters[[i]] <- SGAT::slice(MCMC, k = stat.periods[[i]])
@@ -403,9 +421,9 @@ movementResult$duration <- as.Date(movementResult$departure.date) - as.Date(move
 if(plot == TRUE){
 cat("\n Plotting the results \n")
 data(wrld_simpl, package = "maptools")
-cols <- colorRampPalette(c("green","red","blue"),alpha = 0.5)(12)
+
 month <- format(as.Date(Date),"%m")
-col.dat <- data.frame(color = cols,
+col.dat <- data.frame(color = colorRampPalette(c("green","red","blue"),alpha = 0.5)(12),
                       month = c("01","02","03","04","05","06","07","08","09","10","11","12"))
 
 colors <- merge(data.frame(month = month),col.dat,by.x = "month", by.y = "month", all.x = TRUE)
