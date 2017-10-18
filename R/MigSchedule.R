@@ -305,9 +305,6 @@ if(as.character(stationary.periods[i,1]) %in% as.character(tmp$Date) &
 
 
 
-
-
-
 # create raster of stationary period
 stat.rasters[[i]] <- SGAT::slice(MCMC, k = stat.periods[[i]])
 
@@ -441,12 +438,6 @@ plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
      pch = 19,
      col = colors$color,
 	   add = TRUE)
-legend("topright",
-       legend = col.dat$month,
-       pch = 19,
-       col = col.dat$color,
-       bty = "n",
-       cex = 0.8)
 box()
 
 # Plot Stop-over locations #
