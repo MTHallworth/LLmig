@@ -18,13 +18,13 @@
 MigSchedule <- function(MCMC,
                         prob = 0.95,
                         mig.quantile = 0.5,
-						            stationary.periods = NULL,
-						            stationary.duration = 2,
-						            rm.lat.equinox = FALSE,
-						            days.omit = 5,
-						            progress = TRUE,
-						            plot = TRUE,
-						            plot.legend = TRUE){
+						stationary.periods = NULL,
+						stationary.duration = 2,
+						rm.lat.equinox = FALSE,
+						days.omit = 5,
+						progress = TRUE,
+						plot = TRUE,
+						plot.legend = TRUE){
 
 if(MCMC$breaks != "day"){
 stop(paste0("MigSchedule requires MCMC to have breaks == day, currently MCMC has breaks = ",MCMC$breaks))
@@ -432,12 +432,20 @@ plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
 	 col = colors$color,
 	 main = "Daily Locations")
 plot(wrld_simpl,add = TRUE,col = "gray88")
+if(plot.legend){
+legend("bottomleft", 
+        legend = c("Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"),
+		pch = rep(19,12),
+		col = col.dat$color,
+		cex = 0.8,
+		bty = "n")
+		}
 plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
      add = TRUE)
 plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
      pch = 19,
      col = colors$color,
-	   add = TRUE)
+	 add = TRUE)
 box()
 
 # Plot Stop-over locations #
@@ -468,7 +476,7 @@ plot(wrld_simpl,add = TRUE)
 
 # Plot legend if wanted #
 if(plot.legend){
-legend("topright",
+legend("bottomleft",
         legend = movementResult$arrival.date,
 		col = cols,
 		bty="n",
