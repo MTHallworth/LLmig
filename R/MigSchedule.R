@@ -457,7 +457,10 @@ plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
 plot(wrld_simpl,
     add = TRUE,
 	col = "gray88")
-
+	
+plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
+     add = TRUE)
+	 
 for(i in 1:n.sites){
 plot(movements[[i]],
      col = rev(sp::bpy.colors(100)),
@@ -470,8 +473,6 @@ plot(sp::SpatialPoints(cbind(median.stationary.lon,median.stationary.lat)),
 	 col = cols,
 	 add = TRUE)
 
-plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
-     add = TRUE)
 plot(wrld_simpl,add = TRUE)
 
 # Plot legend if wanted #
