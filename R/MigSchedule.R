@@ -451,7 +451,7 @@ box()
 # Plot Stop-over locations #
 cols <- sp::bpy.colors(nrow(movementResult))
 
-plot(sp::SpatialPoints(cbind(median.stationary.lon,median.stationary.lat)),
+plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
      pch = 19,
 	 main = "Stop-over sites")
 plot(wrld_simpl,
