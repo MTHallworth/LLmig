@@ -470,7 +470,7 @@ plot(sp::SpatialPoints(cbind(median.stationary.lon,median.stationary.lat)),
 	 col = cols,
 	 add = TRUE)
 
-plot(raster::spLines(cbind(median.stationary.lon,median.stationary.lat)),
+plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
      add = TRUE)
 plot(wrld_simpl,add = TRUE)
 
