@@ -335,11 +335,11 @@ ind.sites <- as.numeric(names(ind.sites)[ind.sites])
 
 #tmp$site <- ifelse(tmp$site %in% ind.sites, tmp$site, NA)
 
-  s <- 1
-  for(i in ind.sites) {
-    tmp$mig.site[!is.na(tmp$mig.site) & tmp$mig.site==i] <- s
-    s <- s+1
-  }
+ # s <- 1
+ # for(i in ind.sites) {
+ #  tmp$mig.site[!is.na(tmp$mig.site) & tmp$mig.site==i] <- s
+ #  s <- s+1
+ #}
 
 sites <- unique(tmp$mig.site[!is.na(tmp$mig.site)])
 n.sites <- length(sites)
