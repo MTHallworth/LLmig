@@ -423,7 +423,7 @@ cat("\n Plotting the results \n")
 data(wrld_simpl, package = "maptools")
 
 month <- format(as.Date(Date),"%m")
-col.dat <- data.frame(color = sp::rev(bpy.colors(12)),
+col.dat <- data.frame(color = rev(sp::bpy.colors(n = 12,alpha = 0.5)),
                       month = c("01","02","03","04","05","06","07","08","09","10","11","12"))
 
 colors <- merge(data.frame(month = month),col.dat,by.x = "month", by.y = "month", all.x = TRUE)
