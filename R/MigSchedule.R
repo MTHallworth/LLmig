@@ -421,11 +421,13 @@ if(plot == TRUE){
 cat("\n Plotting the results \n")
 data(wrld_simpl, package = "maptools")
 
+
 month <- format(as.Date(Date),"%m")
-col.dat <- data.frame(color = rev(sp::bpy.colors(n = 12,alpha = 0.5)),
+col.dat <- data.frame(color1 = rev(sp::bpy.colors(n = 12,alpha = 0.5)),
                       month = sprintf("%02d",1:12))
 
-colors1 <- col.dat[match(month,col.dat$month),1]
+colors1 <- as.character(col.dat[match(month,col.dat$month),1])
+
 
 par(mfrow = c(2,2), mar = c(1,1,3,1))
 # Plot Daily Location estimates #
@@ -438,7 +440,7 @@ if(plot.legend){
 legend("bottomleft",
         legend = c("Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"),
 		pch = rep(19,12),
-		col = col.dat$color,
+		col = as.character(col.dat$color),
 		cex = 0.8,
 		bty = "n")
 		}
