@@ -322,23 +322,23 @@ tmp$site.stat[which(!is.na(stat.extract[[i]]))] <- i
 # additional periods should have (1+n.stationary):max(tmp$sites))
 tmp$mig.site <- rep(NA,nrow(tmp))
 for(i in 1:nrow(tmp)){
- tmp$mig.site[i] <- ifelse(is.na(tmp$site[i]) & is.na(tmp$site.stat[i]),NA,min(tmp$site[i]+n.stationary,tmp$site.stat[i],na.rm = TRUE))
+ tmp$mig.site[i] <- ifelse(is.na(tmp$site[i]) & is.na(tmp$site.stat[i]),NA,min((tmp$site[i]+n.stationary),tmp$site.stat[i],na.rm = TRUE))
 }
 
 ind.sites <- tapply(as.numeric(tmp$N), tmp$mig.site, FUN = function(x) ((x[length(x)]-x[1]))>=stationary.duration)
 
 ind.sites <- as.numeric(names(ind.sites)[ind.sites])
 
-#tmp$site <- ifelse(tmp$site %in% ind.sites, tmp$site, NA)
-mig.site1 <- zoo::rollapply(tmp$mig.site,width = 2, FUN = max, na.rm = TRUE, fill = NA)
-mig.site1[is.na(tmp$mig.site)]<-NA
-tmp$mig.site <- mig.site1
-
  s <- 1
   for(i in ind.sites) {
    tmp$mig.site[!is.na(tmp$mig.site) & tmp$mig.site==i] <- s
    s <- s+1
   }
+
+ #tmp$site <- ifelse(tmp$site %in% ind.sites, tmp$site, NA)
+mig.site1 <- zoo::rollapply(tmp$mig.site,width = 2, FUN = max, na.rm = TRUE, fill = NA)
+mig.site1[is.na(tmp$mig.site)]<-NA
+tmp$mig.site <- mig.site1
 }
 
 else{
