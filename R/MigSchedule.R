@@ -324,10 +324,6 @@ tmp$mig.site <- rep(NA,nrow(tmp))
 for(i in 1:nrow(tmp)){
  tmp$mig.site[i] <- ifelse(is.na(tmp$site[i]) & is.na(tmp$site.stat[i]),NA,min(tmp$site[i]+n.stationary,tmp$site.stat[i],na.rm = TRUE))
 }
-}
-else{
-  tmp$mig.site <- tmp$site
-}
 
 ind.sites <- tapply(as.numeric(tmp$N), tmp$mig.site, FUN = function(x) ((x[length(x)]-x[1]))>=stationary.duration)
 
@@ -341,10 +337,16 @@ ind.sites <- as.numeric(names(ind.sites)[ind.sites])
    s <- s+1
   }
 
-mig.site1 <- zoo::rollapply(tmp$mig.site,width = 3, FUN = max, na.rm = TRUE, fill = NA)
+mig.site1 <- zoo::rollapply(tmp$mig.site,width = 2, FUN = max, na.rm = TRUE, fill = NA)
 mig.site1[is.na(tmp$mig.site)]<-NA
+tmp$mig.site <- mig.site1
+}
 
-sites <- unique(mig.site1[!is.na(mig.site1)])
+else{
+  tmp$mig.site <- tmp$site
+}
+
+sites <- unique(tmp$mig.site[!is.na(tmp$mig.site)])
 n.sites <- length(sites)
 
 movements <- v <-  vector('list',n.sites)
@@ -355,7 +357,7 @@ LCI.stat.lon <- UCI.stat.lon <- LCI.stat.lat <- UCI.stat.lat <- rep(NA,n.sites)
 
 for(i in 1:n.sites){
 movements[[i]]<- SGAT::slice(MCMC,
-                       k = which(mig.site1 == sites[i]))
+                       k = which(tmp$mig.site == sites[i]))
 
 if(!is.na(prob)){
 movements[[i]][movements[[i]]< quantile(raster::values(movements[[i]]),probs = prob,na.rm = TRUE)] <- NA
@@ -363,8 +365,8 @@ movements[[i]][movements[[i]]< quantile(raster::values(movements[[i]]),probs = p
 
 movements[[i]] <- movements[[i]]/raster::cellStats(movements[[i]],max, na.rm = TRUE)
 
-arrival.date[i] <- substr(sliceInterval(MCMC,k = which(mig.site1 == sites[i]))[1],start = 1, stop = 10)
-depart.date[i] <- substr(sliceInterval(MCMC,k = which(mig.site1 == sites[i]))[2],start = 1, stop = 10)
+arrival.date[i] <- substr(sliceInterval(MCMC,k = which(tmp$mig.site == sites[i]))[1],start = 1, stop = 10)
+depart.date[i] <- substr(sliceInterval(MCMC,k = which(tmp$mig.site == sites[i]))[2],start = 1, stop = 10)
 }
 
 
