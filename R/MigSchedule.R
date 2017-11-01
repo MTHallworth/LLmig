@@ -333,6 +333,9 @@ ind.sites <- tapply(as.numeric(tmp$N), tmp$mig.site, FUN = function(x) ((x[lengt
 
 ind.sites <- as.numeric(names(ind.sites)[ind.sites])
 
+tmp$mig.site1 <- zoo::rollapply(tmp$mig.site,width = 3, FUN = max, na.rm = TRUE, fill = NA)
+tmp$mig.site1[is.na(tmp$mig.site)]<-NA
+
 #tmp$site <- ifelse(tmp$site %in% ind.sites, tmp$site, NA)
 
  # s <- 1
@@ -352,7 +355,7 @@ LCI.stat.lon <- UCI.stat.lon <- LCI.stat.lat <- UCI.stat.lat <- rep(NA,n.sites)
 
 for(i in 1:n.sites){
 movements[[i]]<- SGAT::slice(MCMC,
-                       k = which(tmp$mig.site == sites[i]))
+                       k = which(tmp$mig.site1 == sites[i]))
 
 if(!is.na(prob)){
 movements[[i]][movements[[i]]< quantile(raster::values(movements[[i]]),probs = prob,na.rm = TRUE)] <- NA
@@ -360,8 +363,8 @@ movements[[i]][movements[[i]]< quantile(raster::values(movements[[i]]),probs = p
 
 movements[[i]] <- movements[[i]]/raster::cellStats(movements[[i]],max, na.rm = TRUE)
 
-arrival.date[i] <- substr(sliceInterval(MCMC,k = which(tmp$mig.site == sites[i]))[1],start = 1, stop = 10)
-depart.date[i] <- substr(sliceInterval(MCMC,k = which(tmp$mig.site == sites[i]))[2],start = 1, stop = 10)
+arrival.date[i] <- substr(sliceInterval(MCMC,k = which(tmp$mig.site1 == sites[i]))[1],start = 1, stop = 10)
+depart.date[i] <- substr(sliceInterval(MCMC,k = which(tmp$mig.site1 == sites[i]))[2],start = 1, stop = 10)
 }
 
 
@@ -420,7 +423,7 @@ cat("\n Plotting the results \n")
 data(wrld_simpl, package = "maptools")
 
 month <- format(as.Date(Date),"%m")
-col.dat <- data.frame(color = colorRampPalette(c("green","red","blue"),alpha = 0.5)(12),
+col.dat <- data.frame(color = sp::rev(bpy.colors(12)),
                       month = c("01","02","03","04","05","06","07","08","09","10","11","12"))
 
 colors <- merge(data.frame(month = month),col.dat,by.x = "month", by.y = "month", all.x = TRUE)
@@ -433,7 +436,7 @@ plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
 	 main = "Daily Locations")
 plot(wrld_simpl,add = TRUE,col = "gray88")
 if(plot.legend){
-legend("bottomleft", 
+legend("bottomleft",
         legend = c("Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"),
 		pch = rep(19,12),
 		col = col.dat$color,
@@ -457,10 +460,10 @@ plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
 plot(wrld_simpl,
     add = TRUE,
 	col = "gray88")
-	
+
 plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
      add = TRUE)
-	 
+
 for(i in 1:n.sites){
 plot(movements[[i]],
      col = rev(sp::bpy.colors(100)),
