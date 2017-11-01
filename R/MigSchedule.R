@@ -333,18 +333,18 @@ ind.sites <- tapply(as.numeric(tmp$N), tmp$mig.site, FUN = function(x) ((x[lengt
 
 ind.sites <- as.numeric(names(ind.sites)[ind.sites])
 
+#tmp$site <- ifelse(tmp$site %in% ind.sites, tmp$site, NA)
+
+ s <- 1
+  for(i in ind.sites) {
+   tmp$mig.site1[!is.na(tmp$mig.site1) & tmp$mig.site1==i] <- s
+   s <- s+1
+  }
+
 tmp$mig.site1 <- zoo::rollapply(tmp$mig.site,width = 3, FUN = max, na.rm = TRUE, fill = NA)
 tmp$mig.site1[is.na(tmp$mig.site)]<-NA
 
-#tmp$site <- ifelse(tmp$site %in% ind.sites, tmp$site, NA)
-
- # s <- 1
- # for(i in ind.sites) {
- #  tmp$mig.site[!is.na(tmp$mig.site) & tmp$mig.site==i] <- s
- #  s <- s+1
- #}
-
-sites <- unique(tmp$mig.site[!is.na(tmp$mig.site)])
+sites <- unique(tmp$mig.site1[!is.na(tmp$mig.site1)])
 n.sites <- length(sites)
 
 movements <- v <-  vector('list',n.sites)
