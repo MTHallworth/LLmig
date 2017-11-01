@@ -439,7 +439,7 @@ if(plot.legend){
 legend("bottomleft",
         legend = c("Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"),
 		pch = rep(19,12),
-		col = col.dat$color,
+		col = colors$color,
 		cex = 0.8,
 		bty = "n")
 		}
