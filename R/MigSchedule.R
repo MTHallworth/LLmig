@@ -269,9 +269,6 @@ site.num <- 1
     tmp$site[!is.na(tmp$site) & tmp$site==i] <- site.num
     site.num <- site.num+1
   }
-  mig.site1 <- zoo::rollapply(tmp$mig.site,width = 2, FUN = max, na.rm = TRUE, fill = NA)
-  mig.site1[is.na(tmp$mig.site)]<-NA
-  tmp$mig.site <- mig.site1
 
 #empty site vector #
 tmp$site.stat <- rep(NA,nrow(tmp))
@@ -284,7 +281,7 @@ stat.periods <- stat.rasters <- stat.extract <- vector('list',n.stationary)
 
 for(i in 1:n.stationary){
 # sequence along the stationary periods
-  # if stationary.period is before logging date - change to first date
+# if stationary.period is before logging date - change to first date
 
 if(as.character(stationary.periods[i,1]) < as.character(tmp$Date[1]) &
    as.character(stationary.periods[i,2]) %in% as.character(tmp$Date)){
@@ -333,16 +330,15 @@ ind.sites <- tapply(as.numeric(tmp$N), tmp$mig.site, FUN = function(x) ((x[lengt
 ind.sites <- as.numeric(names(ind.sites)[ind.sites])
 
 #tmp$site <- ifelse(tmp$site %in% ind.sites, tmp$site, NA)
+mig.site1 <- zoo::rollapply(tmp$mig.site,width = 2, FUN = max, na.rm = TRUE, fill = NA)
+mig.site1[is.na(tmp$mig.site)]<-NA
+tmp$mig.site <- mig.site1
 
  s <- 1
   for(i in ind.sites) {
    tmp$mig.site[!is.na(tmp$mig.site) & tmp$mig.site==i] <- s
    s <- s+1
   }
-
-mig.site1 <- zoo::rollapply(tmp$mig.site,width = 2, FUN = max, na.rm = TRUE, fill = NA)
-mig.site1[is.na(tmp$mig.site)]<-NA
-tmp$mig.site <- mig.site1
 }
 
 else{
