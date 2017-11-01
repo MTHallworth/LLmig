@@ -269,6 +269,9 @@ site.num <- 1
     tmp$site[!is.na(tmp$site) & tmp$site==i] <- site.num
     site.num <- site.num+1
   }
+  mig.site1 <- zoo::rollapply(tmp$mig.site,width = 2, FUN = max, na.rm = TRUE, fill = NA)
+  mig.site1[is.na(tmp$mig.site)]<-NA
+  tmp$mig.site <- mig.site1
 
 #empty site vector #
 tmp$site.stat <- rep(NA,nrow(tmp))
