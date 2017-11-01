@@ -30,179 +30,179 @@ if(MCMC$breaks != "day"){
 stop(paste0("MigSchedule requires MCMC to have breaks == day, currently MCMC has breaks = ",MCMC$breaks))
 }
 
-Dates <- MCMC$mcmc[[1]]$time[MCMC$mcmc[[1]]$rise]
+  Dates <- MCMC$mcmc[[1]]$time[MCMC$mcmc[[1]]$rise]
 
-ks <- unclass(cut(if (MCMC$type == "intermediate") Dates[-length(Dates)] else Dates,
-             breaks = MCMC$breaks,
-			       include.lowest = MCMC$include.lowest,
-             right = MCMC$right))
+  ks <- unclass(cut(if (MCMC$type == "intermediate") Dates[-length(Dates)] else Dates,
+                    breaks = MCMC$breaks,
+                    include.lowest = MCMC$include.lowest,
+                    right = MCMC$right))
 
-# get dates before they're removed
-Date <- levels(ks)
+  # get dates before they're removed
+  Date <- levels(ks)
 
-# keep only the unique days
-ks <- unique(ks)
+  # keep only the unique days
+  ks <- unique(ks)
 
-# Save the unique days - date
-Date <- Date[ks]
+  # Save the unique days - date
+  Date <- Date[ks]
 
-years <- unique(format(as.Date(Date),"%Y"))
-
-
-fall.equinox <- paste0(seq.Date(from = as.Date(paste0(years[1L],"-09-",16-days.omit)),
-                                to = as.Date(paste0(years[1L],"-09-",16+days.omit)), by = 1))
-
-sp.equinox <- paste0(seq.Date(from = as.Date(paste0(years[1L],"-03-",21-days.omit)),
-                              to = as.Date(paste0(years[1L],"-03-",21+days.omit)), by = 1))
-
-if(length(years)>1){
-fall.equinox1 <- paste0(seq.Date(from = as.Date(paste0(years[2L],"-09-",16-days.omit)),
-                                  to = as.Date(paste0(years[2L],"-09-",16+days.omit)), by = 1))
-
-sp.equinox1 <- paste0(seq.Date(from = as.Date(paste0(years[2L],"-03-",21-days.omit)),
-                                to = as.Date(paste0(years[2L],"-03-",21+days.omit)), by = 1))
-
-fall.equinox <- c(fall.equinox,fall.equinox1)
-sp.equinox <- c(sp.equinox,sp.equinox1)
-}
-
-if(any(diff(ks)>1)){
-cat("\n Warning: Dates are not sequential \n")
-}
-
-num.days <- length(ks)
-
-days <- days2pts <- vector('list',num.days)
-
-lon <- lat <- lat.UCI <- lat.LCI <- lon.LCI <- lon.UCI <- rep(NA,num.days)
-
-cat("Calculating mean weighted daily location for", num.days,"days this may take a few minutes \n")
-
-# create progress bar
-
-if(progress){
-pb <- txtProgressBar(min = 0, max = num.days, style = 3)
-}
-
-for(i in 1:num.days){
-
-if(progress){
-setTxtProgressBar(pb, i)
-}
-
-days[[i]]<-SGAT::slice(MCMC,k = ks[i])
-
-if(class(days[[i]]) == "RasterLayer"){
-
-days[[i]][days[[i]]< quantile(raster::values(days[[i]]),na.rm = TRUE, probs = prob)]<-NA
-days2pts[[i]]<-raster::rasterToPoints(days[[i]])
-
-lon[i]<-Hmisc::wtd.quantile(days2pts[[i]][,1],
-                            probs = 0.5,
-                            weight = days2pts[[i]][,3],
-			                      na.rm = TRUE)
-
-lon.LCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,1],
-                                  probs = 0.025,
- 								                  weights = days2pts[[i]][,3],
-								                  na.rm = TRUE)
-
-lon.UCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,1],
-                                  probs = 0.975,
-								                  weights = days2pts[[i]][,3],
-								                  na.rm = TRUE)
-
-lat[i]<- Hmisc::wtd.quantile(days2pts[[i]][,2],
-                             probs = 0.5,
-                             weight = days2pts[[i]][,3],
-			                       na.rm = TRUE)
-
-lat.LCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,2],
-                                  probs = 0.025,
-								                  weights = days2pts[[i]][,3],
-								                  na.rm = TRUE)
-
-lat.UCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,2],
-                                  probs = 0.975,
-								                  weights = days2pts[[i]][,3],
-								                  na.rm = TRUE)
-}
-else{
-cat("\n Warning: ", Date[i]," not currently in data set - NA added \n")
-  lon[i] <- NA
-  lon.LCI[i] <- NA
-  lon.UCI[i] <- NA
-  lat[i] <- NA
-  lat.LCI[i] <- NA
-  lat.UCI[i] <- NA
-}
-}
-
-if(progress){
-close(pb)
-}
-
-cat("\n Calculating distance between each location .... \n")
-
-if(any(is.na(lon))){
-cat("\n Warning: NAs found in location data - expand the grid in MCMC object to avoid NAs \n")
-lon <- zoo::na.approx(lon)
-lat <- zoo::na.approx(lat)
-}
-
-lonlat<-data.frame(Date = Date,
-                   Median.long = lon,
-                   long.LCI = lon.LCI,
-                   long.UCI = lon.UCI,
-                   Median.lat = lat,
-                   lat.LCI = lat.LCI,
-                   lat.UCI = lat.UCI,
-                   Distance.traveled = rep(NA,length(Date)))
+  years <- unique(format(as.Date(Date),"%Y"))
 
 
-distances <- sp::spDists(cbind(lonlat$Median.long,lonlat$Median.lat),
-                         longlat = TRUE,
-				                 segments = TRUE)
+  fall.equinox <- paste0(seq.Date(from = as.Date(paste0(years[1L],"-09-",16-days.omit)),
+                                  to = as.Date(paste0(years[1L],"-09-",16+days.omit)), by = 1))
 
-lonlat$Distance.traveled <- c(NA,distances)
+  sp.equinox <- paste0(seq.Date(from = as.Date(paste0(years[1L],"-03-",21-days.omit)),
+                                to = as.Date(paste0(years[1L],"-03-",21+days.omit)), by = 1))
 
-cat("\n Determining stationary locations ....\n")
+  if(length(years)>1){
+    fall.equinox1 <- paste0(seq.Date(from = as.Date(paste0(years[2L],"-09-",16-days.omit)),
+                                     to = as.Date(paste0(years[2L],"-09-",16+days.omit)), by = 1))
 
-# Determine stationary locations based on longitude and latitude #
-lon.1<-suppressWarnings(changepoint::cpt.mean(as.numeric(lonlat$Median.long),
-                             method = "BinSeg",
-                             Q = length(lonlat$Median.long)/2,
-                             penalty = "Manual",
-                             pen.value = 0.001,
-                             test.stat = "CUSUM",
-                             param.estimates = TRUE))
+    sp.equinox1 <- paste0(seq.Date(from = as.Date(paste0(years[2L],"-03-",21-days.omit)),
+                                   to = as.Date(paste0(years[2L],"-03-",21+days.omit)), by = 1))
+
+    fall.equinox <- c(fall.equinox,fall.equinox1)
+    sp.equinox <- c(sp.equinox,sp.equinox1)
+  }
+
+  if(any(diff(ks)>1)){
+    cat("\n Warning: Dates are not sequential \n")
+  }
+
+  num.days <- length(ks)
+
+  days <- days2pts <- vector('list',num.days)
+
+  lon <- lat <- lat.UCI <- lat.LCI <- lon.LCI <- lon.UCI <- rep(NA,num.days)
+
+  cat("Calculating mean weighted daily location for", num.days,"days this may take a few minutes \n")
+
+  # create progress bar
+
+  if(progress){
+    pb <- txtProgressBar(min = 0, max = num.days, style = 3)
+  }
+
+  for(i in 1:num.days){
+
+    if(progress){
+      setTxtProgressBar(pb, i)
+    }
+
+    days[[i]]<-SGAT::slice(MCMC,k = ks[i])
+
+    if(class(days[[i]]) == "RasterLayer"){
+
+      days[[i]][days[[i]]< quantile(raster::values(days[[i]]),na.rm = TRUE, probs = prob)]<-NA
+      days2pts[[i]]<-raster::rasterToPoints(days[[i]])
+
+      lon[i]<-Hmisc::wtd.quantile(days2pts[[i]][,1],
+                                  probs = 0.5,
+                                  weight = days2pts[[i]][,3],
+                                  na.rm = TRUE)
+
+      lon.LCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,1],
+                                        probs = 0.025,
+                                        weights = days2pts[[i]][,3],
+                                        na.rm = TRUE)
+
+      lon.UCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,1],
+                                        probs = 0.975,
+                                        weights = days2pts[[i]][,3],
+                                        na.rm = TRUE)
+
+      lat[i]<- Hmisc::wtd.quantile(days2pts[[i]][,2],
+                                   probs = 0.5,
+                                   weight = days2pts[[i]][,3],
+                                   na.rm = TRUE)
+
+      lat.LCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,2],
+                                        probs = 0.025,
+                                        weights = days2pts[[i]][,3],
+                                        na.rm = TRUE)
+
+      lat.UCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,2],
+                                        probs = 0.975,
+                                        weights = days2pts[[i]][,3],
+                                        na.rm = TRUE)
+    }
+    else{
+      cat("\n Warning: ", Date[i]," not currently in data set - NA added \n")
+      lon[i] <- NA
+      lon.LCI[i] <- NA
+      lon.UCI[i] <- NA
+      lat[i] <- NA
+      lat.LCI[i] <- NA
+      lat.UCI[i] <- NA
+    }
+  }
+
+  if(progress){
+    close(pb)
+  }
+
+  cat("\n Calculating distance between each location .... \n")
+
+  if(any(is.na(lon))){
+    cat("\n Warning: NAs found in location data - expand the grid in MCMC object to avoid NAs \n")
+    lon <- zoo::na.approx(lon)
+    lat <- zoo::na.approx(lat)
+  }
+
+  lonlat<-data.frame(Date = Date,
+                     Median.long = lon,
+                     long.LCI = lon.LCI,
+                     long.UCI = lon.UCI,
+                     Median.lat = lat,
+                     lat.LCI = lat.LCI,
+                     lat.UCI = lat.UCI,
+                     Distance.traveled = rep(NA,length(Date)))
 
 
-long.tab <- merge(data.frame(N = 1:length(Date),prob.lon = NA),
-                  unique(data.frame(N = changepoint::cpts.full(lon.1)[nrow(changepoint::cpts.full(lon.1)),],
-                  prob.lon=changepoint::pen.value.full(lon.1)/2)),by.x="N",by.y="N",all.x=T)[,-2]
+  distances <- sp::spDists(cbind(lonlat$Median.long,lonlat$Median.lat),
+                           longlat = TRUE,
+                           segments = TRUE)
 
-long.tab$prob.lon.y[is.na(long.tab$prob.lon.y)]<-0
+  lonlat$Distance.traveled <- c(NA,distances)
 
-lat.1<-suppressWarnings(changepoint::cpt.mean(as.numeric(lonlat$Median.lat),
-                             method = "BinSeg",
-                             Q = length(lonlat$Median.lat)/2,
-                             penalty = "Manual",
-                             pen.value = 0.001,
-                             test.stat = "CUSUM",
-                             param.estimates = TRUE))
+  cat("\n Determining stationary locations ....\n")
+
+  # Determine stationary locations based on longitude and latitude #
+  lon.1<-suppressWarnings(changepoint::cpt.mean(as.numeric(lonlat$Median.long),
+                                                method = "BinSeg",
+                                                Q = length(lonlat$Median.long)/2,
+                                                penalty = "Manual",
+                                                pen.value = 0.001,
+                                                test.stat = "CUSUM",
+                                                param.estimates = TRUE))
 
 
-lat.tab <- merge(data.frame(N = 1:length(Date),prob.lat = NA),
-                  unique(data.frame(N = changepoint::cpts.full(lat.1)[nrow(changepoint::cpts.full(lat.1)),],
-                             prob.lat =changepoint::pen.value.full(lat.1)/2)),by.x="N",by.y="N",all.x=T)[,-2]
+  long.tab <- merge(data.frame(N = 1:length(Date),prob.lon = NA),
+                    unique(data.frame(N = changepoint::cpts.full(lon.1)[nrow(changepoint::cpts.full(lon.1)),],
+                                      prob.lon=changepoint::pen.value.full(lon.1)/2)),by.x="N",by.y="N",all.x=T)[,-2]
 
-lat.tab[is.na(lat.tab[,2]),2]<-0
+  long.tab$prob.lon.y[is.na(long.tab$prob.lon.y)]<-0
 
-change.prob <- merge(long.tab,lat.tab, by.x = "N",by.y = "N", all = T)
-change.prob$both.prob <- change.prob$prob.lon.y*change.prob$prob.lat.y
+  lat.1<-suppressWarnings(changepoint::cpt.mean(as.numeric(lonlat$Median.lat),
+                                                method = "BinSeg",
+                                                Q = length(lonlat$Median.lat)/2,
+                                                penalty = "Manual",
+                                                pen.value = 0.001,
+                                                test.stat = "CUSUM",
+                                                param.estimates = TRUE))
 
-# quantile calculation
+
+  lat.tab <- merge(data.frame(N = 1:length(Date),prob.lat = NA),
+                   unique(data.frame(N = changepoint::cpts.full(lat.1)[nrow(changepoint::cpts.full(lat.1)),],
+                                     prob.lat =changepoint::pen.value.full(lat.1)/2)),by.x="N",by.y="N",all.x=T)[,-2]
+
+  lat.tab[is.na(lat.tab[,2]),2]<-0
+
+  change.prob <- merge(long.tab,lat.tab, by.x = "N",by.y = "N", all = T)
+  change.prob$both.prob <- change.prob$prob.lon.y*change.prob$prob.lat.y
+
+  # quantile calculation
   long.prob <- as.numeric(round(as.numeric(quantile(change.prob[change.prob$prob.lon.y!=0,2],probs=ifelse(is.na(mig.quantile),0.5,mig.quantile),na.rm=TRUE)), digits=5))
   lat.prob  <- as.numeric(round(as.numeric(quantile(change.prob[change.prob$prob.lat.y!=0,3],probs=ifelse(is.na(mig.quantile),0.5,mig.quantile),na.rm=TRUE)), digits=5))
   joint.prob <- as.numeric(round(as.numeric(quantile(change.prob[change.prob$both.prob!=0,4],probs=ifelse(is.na(mig.quantile),0.5,mig.quantile),na.rm=TRUE)), digits=5))
@@ -211,46 +211,46 @@ change.prob$both.prob <- change.prob$prob.lon.y*change.prob$prob.lat.y
   latProb <- ifelse(change.prob[,3]>=lat.prob, NA, TRUE)
   jointProb <- ifelse(change.prob[,4] >= joint.prob, NA, TRUE)
 
-tmp <- data.frame(Date = Date[1:nrow(change.prob)],
-                  change.prob,
-                  longProb,
-                  latProb,
-                  jointProb,
-                  site = NA,
-                  site.long = NA,
-                  site.lat = NA,
-                  site.joint = NA)
+  tmp <- data.frame(Date = Date[1:nrow(change.prob)],
+                    change.prob,
+                    longProb,
+                    latProb,
+                    jointProb,
+                    site = NA,
+                    site.long = NA,
+                    site.lat = NA,
+                    site.joint = NA)
 
-if(rm.lat.equinox == TRUE){
+  if(rm.lat.equinox == TRUE){
 
-s.e <- which(Date %in% sp.equinox)
-f.e <- which(Date %in% fall.equinox)
+    s.e <- which(Date %in% sp.equinox)
+    f.e <- which(Date %in% fall.equinox)
 
-tmp$latProb[f.e] <- NA
-tmp$latProb[s.e] <- NA
-}
+    tmp$latProb[f.e] <- NA
+    tmp$latProb[s.e] <- NA
+  }
 
-# Joint Mig Prob #
-site.num <- 1
- for(i in 2:nrow(tmp)) {
-   # stationary in long and lat
-   if((!is.na(tmp$longProb[i-1]) & !is.na(tmp$longProb[i])) & #Long
-      (!is.na(tmp$latProb[i-1]) & !is.na(tmp$latProb[i]))){ #Lat
+  # Joint Mig Prob #
+  site.num <- 1
+  for(i in 2:nrow(tmp)) {
+    # stationary in long and lat
+    if((!is.na(tmp$longProb[i-1]) & !is.na(tmp$longProb[i])) & #Long
+       (!is.na(tmp$latProb[i-1]) & !is.na(tmp$latProb[i]))){ #Lat
       tmp$site[i] <- site.num
-   }
-   # movement in lat but not long
+    }
+    # movement in lat but not long
     if((!is.na(tmp$longProb[i-1]) & !is.na(tmp$longProb[i])) &
        (is.na(tmp$latProb[i-1]) & !is.na(tmp$latProb[i]))) {
       site.num <- site.num+1
       tmp$site[i] <- site.num
     }
-  # movement in long but not lat
+    # movement in long but not lat
     if((is.na(tmp$longProb[i-1]) & !is.na(tmp$longProb[i])) &
        (!is.na(tmp$latProb[i-1]) & !is.na(tmp$latProb[i]))) {
       site.num <- site.num+1
       tmp$site[i] <- site.num
     }
-  # movement in both long & lat
+    # movement in both long & lat
     if((is.na(tmp$longProb[i-1]) & !is.na(tmp$longProb[i])) &
        (is.na(tmp$latProb[i-1]) & !is.na(tmp$latProb[i]))) {
       site.num <- site.num+1
@@ -270,104 +270,102 @@ site.num <- 1
     site.num <- site.num+1
   }
 
-#empty site vector #
-tmp$site.stat <- rep(NA,nrow(tmp))
+  #empty site vector #
+  tmp$site.stat <- rep(NA,nrow(tmp))
 
-if(!is.null(stationary.periods)){
-n.stationary <- nrow(stationary.periods)
+  if(!is.null(stationary.periods)){
+    n.stationary <- nrow(stationary.periods)
 
-# make empty lists
-stat.periods <- stat.rasters <- stat.extract <- vector('list',n.stationary)
+    # make empty lists
+    stat.periods <- stat.rasters <- stat.extract <- vector('list',n.stationary)
 
-for(i in 1:n.stationary){
-# sequence along the stationary periods
-# if stationary.period is before logging date - change to first date
+    for(i in 1:n.stationary){
+      # sequence along the stationary periods
+      # if stationary.period is before logging date - change to first date
 
-if(as.character(stationary.periods[i,1]) < as.character(tmp$Date[1]) &
-   as.character(stationary.periods[i,2]) %in% as.character(tmp$Date)){
-stat.periods[[i]] <- seq(from = 1,
-                         to = which(as.character(tmp$Date) == as.character(stationary.periods[i,2])),
-                         by = 1)
-}
+      if(as.character(stationary.periods[i,1]) < as.character(tmp$Date[1]) &
+         as.character(stationary.periods[i,2]) %in% as.character(tmp$Date)){
+        stat.periods[[i]] <- seq(from = 1,
+                                 to = which(as.character(tmp$Date) == as.character(stationary.periods[i,2])),
+                                 by = 1)
+      }
 
-if(as.character(stationary.periods[i,1]) %in% as.character(tmp$Date) &
-   as.character(stationary.periods[i,2]) %in% as.character(tmp$Date)){
-stat.periods[[i]] <- seq(from = which(as.character(tmp$Date) == as.character(stationary.periods[i,1])),
-                         to = which(as.character(tmp$Date) == as.character(stationary.periods[i,2])),
-                         by = 1)
-}
-if(as.character(stationary.periods[i,1]) %in% as.character(tmp$Date) &
-   !(as.character(stationary.periods[i,2]) %in% as.character(tmp$Date))){
-    stat.periods[[i]] <- seq(from = which(as.character(tmp$Date) == as.character(stationary.periods[i,1])),
-                             to = max(which(as.character(tmp$Date) < as.character(stationary.periods[i,2]))),
-                             by = 1)
+      if(as.character(stationary.periods[i,1]) %in% as.character(tmp$Date) &
+         as.character(stationary.periods[i,2]) %in% as.character(tmp$Date)){
+        stat.periods[[i]] <- seq(from = which(as.character(tmp$Date) == as.character(stationary.periods[i,1])),
+                                 to = which(as.character(tmp$Date) == as.character(stationary.periods[i,2])),
+                                 by = 1)
+      }
+      if(as.character(stationary.periods[i,1]) %in% as.character(tmp$Date) &
+         !(as.character(stationary.periods[i,2]) %in% as.character(tmp$Date))){
+        stat.periods[[i]] <- seq(from = which(as.character(tmp$Date) == as.character(stationary.periods[i,1])),
+                                 to = max(which(as.character(tmp$Date) < as.character(stationary.periods[i,2]))),
+                                 by = 1)
+      }
+
+
+
+      # create raster of stationary period
+      stat.rasters[[i]] <- SGAT::slice(MCMC, k = stat.periods[[i]])
+
+      # keep the 95% CI
+      stat.rasters[[i]][stat.rasters[[i]] < quantile(raster::values(stat.rasters[[i]]), probs = 0.95,na.rm = TRUE)] <- NA
+
+      stat.extract[[i]] <- raster::extract(stat.rasters[[i]], # raster
+                                           sp::SpatialPoints(cbind(lonlat$Median.long,lonlat$Median.lat)), #spatialpoints
+                                           method = "simple")
+
+      tmp$site.stat[which(!is.na(stat.extract[[i]]))] <- i
+
+      tmp$site.stat[c(min(which(tmp$site.stat==i)):max(which(tmp$site.stat==i)))] <- i
+    }
+
+    # stationary.periods should have numbers 1:nrow(stationary.periods)
+    # additional periods should have (1+n.stationary):max(tmp$sites))
+    tmp$mig.site <- rep(NA,nrow(tmp))
+    for(i in 1:nrow(tmp)){
+      tmp$mig.site[i] <- ifelse(is.na(tmp$site[i]) & is.na(tmp$site.stat[i]),NA,min((tmp$site[i]+n.stationary),tmp$site.stat[i],na.rm = TRUE))
+    }
+
+    ind.sites <- tapply(as.numeric(tmp$N), tmp$mig.site, FUN = function(x) ((x[length(x)]-x[1]))>=stationary.duration)
+
+    ind.sites <- as.numeric(names(ind.sites)[ind.sites])
+
+    s <- 1
+    for(i in ind.sites) {
+      tmp$mig.site[!is.na(tmp$mig.site) & tmp$mig.site==i] <- s
+      s <- s+1
+    }
+
+    #tmp$site <- ifelse(tmp$site %in% ind.sites, tmp$site, NA)
+    mig.site1 <- suppressWarnings(zoo::rollapply(tmp$mig.site,width = 2, FUN = min, na.rm = TRUE, fill = NA))
+    mig.site1[is.na(tmp$mig.site)]<-NA
+    tmp$mig.site <- mig.site1
   }
+  if(is.null(stationary.periods)){tmp$mig.site <- tmp$site}
 
+  sites <- unique(tmp$mig.site[!is.na(tmp$mig.site)])
+  n.sites <- length(sites)
 
+  movements <- v <-  vector('list',n.sites)
 
-# create raster of stationary period
-stat.rasters[[i]] <- SGAT::slice(MCMC, k = stat.periods[[i]])
+  median.stationary.lat <- median.stationary.lon <- arrival.date <- depart.date <- rep(NA, n.sites)
 
-# keep the 95% CI
-stat.rasters[[i]][stat.rasters[[i]] < quantile(raster::values(stat.rasters[[i]]), probs = 0.95,na.rm = TRUE)] <- NA
+  LCI.stat.lon <- UCI.stat.lon <- LCI.stat.lat <- UCI.stat.lat <- rep(NA,n.sites)
 
-stat.extract[[i]] <- raster::extract(stat.rasters[[i]], # raster
-                                     sp::SpatialPoints(cbind(lonlat$Median.long,lonlat$Median.lat)), #spatialpoints
-                                     method = "simple")
+  for(i in 1:n.sites){
+    movements[[i]]<- SGAT::slice(MCMC,
+                                 k = which(tmp$mig.site == sites[i]))
 
-tmp$site.stat[which(!is.na(stat.extract[[i]]))] <- i
-}
+    if(!is.na(prob)){
+      movements[[i]][movements[[i]]< quantile(raster::values(movements[[i]]),probs = prob,na.rm = TRUE)] <- NA
+    }
 
-# stationary.periods should have numbers 1:nrow(stationary.periods)
-# additional periods should have (1+n.stationary):max(tmp$sites))
-tmp$mig.site <- rep(NA,nrow(tmp))
-for(i in 1:nrow(tmp)){
- tmp$mig.site[i] <- ifelse(is.na(tmp$site[i]) & is.na(tmp$site.stat[i]),NA,min((tmp$site[i]+n.stationary),tmp$site.stat[i],na.rm = TRUE))
-}
+    movements[[i]] <- movements[[i]]/raster::cellStats(movements[[i]],max, na.rm = TRUE)
 
-ind.sites <- tapply(as.numeric(tmp$N), tmp$mig.site, FUN = function(x) ((x[length(x)]-x[1]))>=stationary.duration)
-
-ind.sites <- as.numeric(names(ind.sites)[ind.sites])
-
- s <- 1
-  for(i in ind.sites) {
-   tmp$mig.site[!is.na(tmp$mig.site) & tmp$mig.site==i] <- s
-   s <- s+1
+    arrival.date[i] <- substr(sliceInterval(MCMC,k = which(tmp$mig.site == sites[i]))[1],start = 1, stop = 10)
+    depart.date[i] <- substr(sliceInterval(MCMC,k = which(tmp$mig.site == sites[i]))[2],start = 1, stop = 10)
   }
-
- #tmp$site <- ifelse(tmp$site %in% ind.sites, tmp$site, NA)
-mig.site1 <- zoo::rollapply(tmp$mig.site,width = 2, FUN = max, na.rm = TRUE, fill = NA)
-mig.site1[is.na(tmp$mig.site)]<-NA
-tmp$mig.site <- mig.site1
-}
-
-else{
-  tmp$mig.site <- tmp$site
-}
-
-sites <- unique(tmp$mig.site[!is.na(tmp$mig.site)])
-n.sites <- length(sites)
-
-movements <- v <-  vector('list',n.sites)
-
-median.stationary.lat <- median.stationary.lon <- arrival.date <- depart.date <- rep(NA, n.sites)
-
-LCI.stat.lon <- UCI.stat.lon <- LCI.stat.lat <- UCI.stat.lat <- rep(NA,n.sites)
-
-for(i in 1:n.sites){
-movements[[i]]<- SGAT::slice(MCMC,
-                       k = which(tmp$mig.site == sites[i]))
-
-if(!is.na(prob)){
-movements[[i]][movements[[i]]< quantile(raster::values(movements[[i]]),probs = prob,na.rm = TRUE)] <- NA
-}
-
-movements[[i]] <- movements[[i]]/raster::cellStats(movements[[i]],max, na.rm = TRUE)
-
-arrival.date[i] <- substr(sliceInterval(MCMC,k = which(tmp$mig.site == sites[i]))[1],start = 1, stop = 10)
-depart.date[i] <- substr(sliceInterval(MCMC,k = which(tmp$mig.site == sites[i]))[2],start = 1, stop = 10)
-}
-
 
 movements<-raster::stack(movements)
 
@@ -425,22 +423,22 @@ data(wrld_simpl, package = "maptools")
 
 month <- format(as.Date(Date),"%m")
 col.dat <- data.frame(color = rev(sp::bpy.colors(n = 12,alpha = 0.5)),
-                      month = c("01","02","03","04","05","06","07","08","09","10","11","12"))
+                      month = sprintf("%02d",1:12))
 
-colors <- merge(data.frame(month = month),col.dat,by.x = "month", by.y = "month", all.x = TRUE)
+colors1 <- col.dat[match(month,col.dat$month),1]
 
 par(mfrow = c(2,2), mar = c(1,1,3,1))
 # Plot Daily Location estimates #
 plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
 	 pch = 19,
-	 col = colors$color,
+	 col = colors1,
 	 main = "Daily Locations")
 plot(wrld_simpl,add = TRUE,col = "gray88")
 if(plot.legend){
 legend("bottomleft",
         legend = c("Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"),
 		pch = rep(19,12),
-		col = colors$color,
+		col = col.dat$color,
 		cex = 0.8,
 		bty = "n")
 		}
@@ -448,7 +446,7 @@ plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
      add = TRUE)
 plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
      pch = 19,
-     col = colors$color,
+     col = colors1,
 	 add = TRUE)
 box()
 
