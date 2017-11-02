@@ -316,9 +316,9 @@ stop(paste0("MigSchedule requires MCMC to have breaks == day, currently MCMC has
                                            method = "simple")
 
       tmp$site.stat[which(!is.na(stat.extract[[i]]))] <- i
+}
 
-      tmp$site.stat[c(min(which(tmp$site.stat==i)):max(which(tmp$site.stat==i)))] <- i
-    }
+      tmp$site.stat <- zoo::na.locf(tmp$site.stat, na.rm = F,maxgap = 10, rule = 1)
 
     # stationary.periods should have numbers 1:nrow(stationary.periods)
     # additional periods should have (1+n.stationary):max(tmp$sites))
@@ -423,7 +423,7 @@ data(wrld_simpl, package = "maptools")
 
 
 month <- format(as.Date(Date),"%m")
-col.dat <- data.frame(color1 = rev(sp::bpy.colors(n = 12,alpha = 0.5)),
+col.dat <- data.frame(color1 = rev(sp::bpy.colors(n = 12,alpha = 0.4)),
                       month = sprintf("%02d",1:12))
 
 colors1 <- as.character(col.dat[match(month,col.dat$month),1])
