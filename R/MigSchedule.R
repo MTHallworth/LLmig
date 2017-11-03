@@ -321,6 +321,7 @@ stop(paste0("MigSchedule requires MCMC to have breaks == day, currently MCMC has
       tmp$site.stat <- zoo::na.locf(tmp$site.stat, na.rm = F,maxgap = 10, rule = 1)
 
       ### Ensure that values upon return to stationary period after leaving get different values ###
+      if(n.stationary > 1){
       for(i in 1:(n.stationary-1)){
         StatValues1 <- seq(from = min(which(tmp$site.stat == i)), to = max(which(tmp$site.stat == i)),by = 1)
         StatValues2 <- seq(from = min(which(tmp$site.stat == i+1)), to = max(which(tmp$site.stat == i+1)),by = 1)
@@ -329,7 +330,7 @@ stop(paste0("MigSchedule requires MCMC to have breaks == day, currently MCMC has
           tmp$site.stat[x[x > max(which(tmp$site.stat == 1+1))]] <- i+2
         }
       }
-
+}
     # stationary.periods should have numbers 1:nrow(stationary.periods)
     # additional periods should have (1+n.stationary):max(tmp$sites))
     tmp$mig.site <- rep(NA,nrow(tmp))
