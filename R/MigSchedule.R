@@ -355,6 +355,8 @@ stop(paste0("MigSchedule requires MCMC to have breaks == day, currently MCMC has
   }
   if(is.null(stationary.periods)){tmp$mig.site <- tmp$site}
 
+  lonlat$site <- tmp$mig.site
+
   sites <- unique(tmp$mig.site[!is.na(tmp$mig.site)])
   n.sites <- length(sites)
 
