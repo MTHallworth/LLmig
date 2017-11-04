@@ -368,7 +368,7 @@ stop(paste0("MigSchedule requires MCMC to have breaks == day, currently MCMC has
         tmp$mig.site[x[x > max(which(tmp$mig.site == i)+1)]] <- i+2
       }
     }
-
+}
   lonlat$site <- tmp$mig.site
 
   movements <- v <-  vector('list',n.sites)
