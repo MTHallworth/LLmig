@@ -326,8 +326,8 @@ stop(paste0("MigSchedule requires MCMC to have breaks == day, currently MCMC has
         StatValues1 <- seq(from = min(which(tmp$site.stat == i)), to = max(which(tmp$site.stat == i)),by = 1)
         StatValues2 <- seq(from = min(which(tmp$site.stat == i+1)), to = max(which(tmp$site.stat == i+1)),by = 1)
         if(any(StatValues2 %in% StatValues1)){
-          x <- which(tmp$site.stat == 1)
-          tmp$site.stat[x[x > max(which(tmp$site.stat == 1+1))]] <- i+2
+          x <- which(tmp$site.stat == i)
+          tmp$site.stat[x[x > max(which(tmp$site.stat == i)+1)]] <- i+2
         }
       }
 }
@@ -355,10 +355,21 @@ stop(paste0("MigSchedule requires MCMC to have breaks == day, currently MCMC has
   }
   if(is.null(stationary.periods)){tmp$mig.site <- tmp$site}
 
-  lonlat$site <- tmp$mig.site
-
   sites <- unique(tmp$mig.site[!is.na(tmp$mig.site)])
   n.sites <- length(sites)
+
+  ### Ensure that values upon return to stationary period after leaving get different values ###
+  if(n.sites > 1){
+    for(i in 1:(n.sites-1)){
+      StatValues1 <- seq(from = min(which(tmp$mig.site == i)), to = max(which(tmp$mig.site == i)),by = 1)
+      StatValues2 <- seq(from = min(which(tmp$mig.site == i+1)), to = max(which(tmp$mig.site == i+1)),by = 1)
+      if(any(StatValues2 %in% StatValues1)){
+        x <- which(tmp$mig.site == i)
+        tmp$mig.site[x[x > max(which(tmp$mig.site == i)+1)]] <- i+2
+      }
+    }
+
+  lonlat$site <- tmp$mig.site
 
   movements <- v <-  vector('list',n.sites)
 
