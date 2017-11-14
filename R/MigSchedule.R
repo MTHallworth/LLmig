@@ -455,18 +455,31 @@ if(collapseSites == TRUE){
                            "NA")
   }
 }
-  movementResult <- data.frame(arrival.date = ifelse(collapseSites==FALSE,arrival.date,arrival.date.new),
-                               departure.date = ifelse(collapseSites==FALSE,depart.date,depart.date.new),
-                               median.lon = ifelse(collapseSites==FALSE,median.stationary.lon,median.stationary.lon.new),
-                               lon.LCI = ifelse(collapseSites==FALSE,LCI.stat.lon,LCI.stat.lon.new),
-                               lon.UCI = ifelse(collapseSites==FALSE,UCI.stat.lon,UCI.stat.lon.new),
-                               median.lat = ifelse(collapseSites==FALSE,median.stationary.lat,median.stationary.lat.new),
-                               lat.LCI = ifelse(collapseSites==FALSE,LCI.stat.lat,LCI.stat.lat.new),
-                               lat.UCI = ifelse(collapseSites==FALSE,UCI.stat.lat,UCI.stat.lat.new),
-                               distance.km = ifelse(collapseSites == FALSE,c(NA,distance.km),c(NA,distance.km.new)),
-                               country = ifelse(collapseSites==FALSE,loc,loc.new),
-                               state = ifelse(collapseSites==FALSE,win.state,win.state.new))
-
+  if(collapseSites == FALSE){
+    movementResult <- data.frame(arrival.date = arrival.date,
+                                 departure.date = depart.date,
+                                 median.lon = median.stationary.lon,
+                                 lon.LCI = LCI.stat.lon,
+                                 lon.UCI = UCI.stat.lon,
+                                 median.lat = median.stationary.lat,
+                                 lat.LCI = LCI.stat.lat,
+                                 lat.UCI = UCI.stat.lat,
+                                 distance.km = c(NA,distance.km),
+                                 country = loc,
+                                 state = win.state)
+  }else{
+    movementResult <- data.frame(arrival.date = arrival.date.new,
+                                 departure.date = depart.date.new,
+                                 median.lon = median.stationary.lon.new,
+                                 lon.LCI = LCI.stat.lon.new,
+                                 lon.UCI = UCI.stat.lon.new,
+                                 median.lat = median.stationary.lat.new,
+                                 lat.LCI = LCI.stat.lat.new,
+                                 lat.UCI = UCI.stat.lat.new,
+                                 distance.km = c(NA,distance.km.new),
+                                 country = loc.new,
+                                 state = win.state.new)
+  }
   movementResult$duration <-as.Date(movementResult$departure.date) - as.Date(movementResult$arrival.date)
 
   if(plot == TRUE){
