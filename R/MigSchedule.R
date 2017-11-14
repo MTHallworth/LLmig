@@ -388,7 +388,7 @@ if(collapseSites == TRUE){
   for(i in 2:n.sites){
     inPrev <- raster::extract(movements[[i-1]],sp::SpatialPoints(cbind(median.stationary.lon[i],median.stationary.lat[i]), sp::CRS(WGS84)))
     if(!is.na(inPrev)){
-    lonlat$newSites[which(lonlat$site == i)] <- i-1
+    lonlat$newSites[which(lonlat$site == i)] <- (i-1)
     }
   }
   new.sites <- max(lonlat$newSites,na.rm = TRUE)
@@ -419,6 +419,8 @@ if(collapseSites == TRUE){
   movements.new<-raster::stack(movements.new)
 
   names(movements.new) <- paste0(arrival.date.new,"_",depart.date.new)
+
+  v <- vector('list',new.sites)
 
   for(i in 1:raster::nlayers(movements.new)){
     v[[i]]<-raster::rasterToPoints(movements.new[[i]])
