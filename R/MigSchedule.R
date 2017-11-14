@@ -384,6 +384,8 @@ MigSchedule <- function(MCMC = S,
 # Check to see if the median location of the previous stop falls within the 95% confidence interval of the subsequent stop -
   # if so - merge the sites #
 if(collapseSites == TRUE){
+  cat("\n Collapsing sites ....\n")
+
   lonlat$newSites <- lonlat$site
   for(i in 2:n.sites){
     inPrev <- raster::extract(movements[[i-1]],sp::SpatialPoints(cbind(median.stationary.lon[i],median.stationary.lat[i]), sp::CRS(WGS84)))
@@ -396,7 +398,7 @@ if(collapseSites == TRUE){
   newSites <- unique(lonlat$newSites)
   newSites <- newSites[!is.na(newSites)]
 
-  movements.new <- v <-  vector('list',new.sites)
+  movements.new <- v.new <-  vector('list',new.sites)
 
   median.stationary.lat.new <- median.stationary.lon.new <- arrival.date.new <- depart.date.new <- rep(NA, new.sites)
 
@@ -420,16 +422,14 @@ if(collapseSites == TRUE){
 
   names(movements.new) <- paste0(arrival.date.new,"_",depart.date.new)
 
-  v <- vector('list',new.sites)
-
   for(i in 1:raster::nlayers(movements.new)){
-    v[[i]]<-raster::rasterToPoints(movements.new[[i]])
-    median.stationary.lon.new[i]<-Hmisc::wtd.quantile(v[[i]][,1],probs= 0.5,weight = v[[i]][,3],na.rm = TRUE)
-    LCI.stat.lon.new[i]<-Hmisc::wtd.quantile(v[[i]][,1],probs = 0.025, weights = v[[i]][,3])
-    UCI.stat.lon.new[i]<-Hmisc::wtd.quantile(v[[i]][,1],probs = 0.975, weights = v[[i]][,3])
-    median.stationary.lat.new[i]<-Hmisc::wtd.quantile(v[[i]][,2],probs = 0.5,weight = v[[i]][,3],na.rm = TRUE)
-    LCI.stat.lat.new[i]<-Hmisc::wtd.quantile(v[[i]][,2],probs = 0.025, weights = v[[i]][,3])
-    UCI.stat.lat.new[i]<-Hmisc::wtd.quantile(v[[i]][,2],probs = 0.975, weights = v[[i]][,3])
+    v.new[[i]]<-raster::rasterToPoints(movements.new[[i]])
+    median.stationary.lon.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,1],probs= 0.5,weight = v.new[[i]][,3],na.rm = TRUE)
+    LCI.stat.lon.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,1],probs = 0.025, weights = v.new[[i]][,3])
+    UCI.stat.lon.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,1],probs = 0.975, weights = v.new[[i]][,3])
+    median.stationary.lat.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,2],probs = 0.5,weight = v.new[[i]][,3],na.rm = TRUE)
+    LCI.stat.lat.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,2],probs = 0.025, weights = v.new[[i]][,3])
+    UCI.stat.lat.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,2],probs = 0.975, weights = v.new[[i]][,3])
   }
 
   distance.km.new <- sp::spDists(cbind(median.stationary.lon.new,median.stationary.lat.new),
@@ -444,12 +444,12 @@ if(collapseSites == TRUE){
   state <- sp::spTransform(state, sp::CRS(WGS84))
 
   loc.new <- sp::over(sp::SpatialPoints(cbind(median.stationary.lon.new,median.stationary.lat.new), sp::CRS(WGS84)),wrld_simpl)$NAME
-  loc.new <- droplevels(loc)
+  loc.new <- droplevels(loc.new)
 
   win.state.new <- rep(NA,length(loc.new))
 
   for(i in 1:length(loc.new)){
-    win.state.new[i] <- ifelse(loc[i] == "United States",
+    win.state.new[i] <- ifelse(loc.new[i] == "United States",
                            sp::over(sp::SpatialPoints(cbind(median.stationary.lon.new[i],median.stationary.lat.new[i]), sp::CRS(WGS84)),state)$NAME_1,
                            "NA")
   }
