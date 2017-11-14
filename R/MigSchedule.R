@@ -20,6 +20,7 @@ MigSchedule <- function(MCMC = S,
                         mig.quantile = 0.5,
                         stationary.periods = stationary.periods,
                         stationary.duration = 1,
+                        collapseSites = FALSE,
                         rm.lat.equinox = FALSE,
                         days.omit = 5,
                         progress = TRUE,
@@ -380,19 +381,92 @@ MigSchedule <- function(MCMC = S,
                            "NA")
   }
 
-  movementResult <- data.frame(arrival.date = arrival.date,
-                               departure.date = depart.date,
-                               median.lon = median.stationary.lon,
-                               lon.LCI = LCI.stat.lon,
-                               lon.UCI = UCI.stat.lon,
-                               median.lat = median.stationary.lat,
-                               lat.LCI = LCI.stat.lat,
-                               lat.UCI = UCI.stat.lat,
-                               distance.km = c(NA,distance.km),
-                               country = loc,
-                               state = win.state)
+# Check to see if the median location of the previous stop falls within the 95% confidence interval of the subsequent stop -
+  # if so - merge the sites #
+if(collapseLocs == TRUE){
+  lonlat$newSites <- lonlat$site
+  for(i in 2:n.sites){
+    inPrev <- raster::extract(sp::SpatialPoints(cbind(median.stationary.lon[i],median.stationary.lat[i]), sp::CRS(WGS84)),movements[[i-1]])
+    if(!is.na(inPrev)){
+    lonlat$newSites[which(lonlat$site == i)] <- i-1
+    }
+  }
+  new.sites <- max(lonlat$newSites,na.rm = TRUE)
 
-  movementResult$duration <- as.Date(movementResult$departure.date) - as.Date(movementResult$arrival.date)
+  newSites <- unique(lonlat$newSites)
+  newSites <- sites[!is.na(newSites)]
+
+  movements.new <- v <-  vector('list',new.sites)
+
+  median.stationary.lat.new <- median.stationary.lon.new <- arrival.date.new <- depart.date.new <- rep(NA, n.sites)
+
+  LCI.stat.lon.new <- UCI.stat.lon.new <- LCI.stat.lat.new <- UCI.stat.lat.new <- rep(NA,new.sites)
+
+  for(i in 1:new.sites){
+    movements.new[[i]]<- SGAT::slice(MCMC,
+                                 k = which(lonlat$newSites == newSites[i]))
+
+    if(!is.na(prob)){
+      movements.new[[i]][movements.new[[i]]< quantile(raster::values(movements.new[[i]]),probs = prob,na.rm = TRUE)] <- NA
+    }
+
+    movements.new[[i]] <- movements.new[[i]]/raster::cellStats(movements.new[[i]],max, na.rm = TRUE)
+
+    arrival.date.new[i] <- substr(sliceInterval(MCMC,k = which(lonlat$newSites == newSites[i]))[1],start = 1, stop = 10)
+    depart.date.new[i] <- substr(sliceInterval(MCMC,k = which(lonlat$newSites == newSites[i]))[2],start = 1, stop = 10)
+  }
+
+  movements.new<-raster::stack(movements.new)
+
+  names(movements.new) <- paste0(arrival.date.new,"_",depart.date.new)
+
+  for(i in 1:raster::nlayers(movements.new)){
+    v[[i]]<-raster::rasterToPoints(movements.new[[i]])
+    median.stationary.lon.new[i]<-Hmisc::wtd.quantile(v[[i]][,1],probs= 0.5,weight = v[[i]][,3],na.rm = TRUE)
+    LCI.stat.lon.new[i]<-Hmisc::wtd.quantile(v[[i]][,1],probs = 0.025, weights = v[[i]][,3])
+    UCI.stat.lon.new[i]<-Hmisc::wtd.quantile(v[[i]][,1],probs = 0.975, weights = v[[i]][,3])
+    median.stationary.lat.new[i]<-Hmisc::wtd.quantile(v[[i]][,2],probs = 0.5,weight = v[[i]][,3],na.rm = TRUE)
+    LCI.stat.lat.new[i]<-Hmisc::wtd.quantile(v[[i]][,2],probs = 0.025, weights = v[[i]][,3])
+    UCI.stat.lat.new[i]<-Hmisc::wtd.quantile(v[[i]][,2],probs = 0.975, weights = v[[i]][,3])
+  }
+
+  distance.km.new <- sp::spDists(cbind(median.stationary.lon.new,median.stationary.lat.new),
+                             longlat = TRUE,
+                             segments = TRUE)
+
+  data(wrld_simpl, package = "maptools")
+  state<-raster::getData('GADM', country='USA', level=1)
+
+  WGS84 <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
+
+  state <- sp::spTransform(state, sp::CRS(WGS84))
+
+  loc.new <- sp::over(sp::SpatialPoints(cbind(median.stationary.lon.new,median.stationary.lat.new), sp::CRS(WGS84)),wrld_simpl)$NAME
+  loc.new <- droplevels(loc)
+
+  win.state.new <- rep(NA,length(loc.new))
+
+  for(i in 1:length(loc.new)){
+    win.state.new[i] <- ifelse(loc[i] == "United States",
+                           sp::over(sp::SpatialPoints(cbind(median.stationary.lon.new[i],median.stationary.lat.new[i]), sp::CRS(WGS84)),state)$NAME_1,
+                           "NA")
+  }
+}
+  movementResult <- data.frame(arrival.date = ifelse(collapseSites==FALSE,arrival.date,arrival.date.new),
+                               departure.date = ifelse(collapseSites==FALSE,depart.date,depart.date.new),
+                               median.lon = ifelse(collapseSites==FALSE,median.stationary.lon,median.stationary.lon.new),
+                               lon.LCI = ifelse(collapseSites==FALSE,LCI.stat.lon,LCI.stat.lon.new),
+                               lon.UCI = ifelse(collapseSites==FALSE,UCI.stat.lon,UCI.stat.lon.new),
+                               median.lat = ifelse(collapseSites==FALSE,median.stationary.lat,median.stationary.lat.new),
+                               lat.LCI = ifelse(collapseSites==FALSE,LCI.stat.lat,LCI.stat.lat.new),
+                               lat.UCI = ifelse(collapseSites==FALSE,UCI.stat.lat,UCI.stat.lat.new),
+                               distance.km = ifelse(collapseSites == FALSE,c(NA,distance.km),c(NA,distance.km.new)),
+                               country = ifelse(collapseSites==FALSE,loc,loc.new),
+                               state = ifelse(collapseSites==FALSE,win.state,win.state.new))
+
+  movementResult$duration <- ifelse(collapseSites == FALSE,
+                                    as.Date(movementResult$departure.date) - as.Date(movementResult$arrival.date),
+                                    as.Date(movementResult$departure.date.new) - as.Date(movementResult$arrival.date.new))
 
   if(plot == TRUE){
     cat("\n Plotting the results \n")
