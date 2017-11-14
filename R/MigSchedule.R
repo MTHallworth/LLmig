@@ -398,7 +398,7 @@ if(collapseSites == TRUE){
 
   movements.new <- v <-  vector('list',new.sites)
 
-  median.stationary.lat.new <- median.stationary.lon.new <- arrival.date.new <- depart.date.new <- rep(NA, n.sites)
+  median.stationary.lat.new <- median.stationary.lon.new <- arrival.date.new <- depart.date.new <- rep(NA, new.sites)
 
   LCI.stat.lon.new <- UCI.stat.lon.new <- LCI.stat.lat.new <- UCI.stat.lat.new <- rep(NA,new.sites)
 
