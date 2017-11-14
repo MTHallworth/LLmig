@@ -467,9 +467,7 @@ if(collapseSites == TRUE){
                                country = ifelse(collapseSites==FALSE,loc,loc.new),
                                state = ifelse(collapseSites==FALSE,win.state,win.state.new))
 
-  movementResult$duration <- ifelse(collapseSites == FALSE,
-                                    as.Date(movementResult$departure.date) - as.Date(movementResult$arrival.date),
-                                    as.Date(movementResult$departure.date.new) - as.Date(movementResult$arrival.date.new))
+  movementResult$duration <-as.Date(movementResult$departure.date) - as.Date(movementResult$arrival.date)
 
   if(plot == TRUE){
     cat("\n Plotting the results \n")
