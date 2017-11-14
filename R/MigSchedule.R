@@ -383,7 +383,7 @@ MigSchedule <- function(MCMC = S,
 
 # Check to see if the median location of the previous stop falls within the 95% confidence interval of the subsequent stop -
   # if so - merge the sites #
-if(collapseLocs == TRUE){
+if(collapseSites == TRUE){
   lonlat$newSites <- lonlat$site
   for(i in 2:n.sites){
     inPrev <- raster::extract(sp::SpatialPoints(cbind(median.stationary.lon[i],median.stationary.lat[i]), sp::CRS(WGS84)),movements[[i-1]])
