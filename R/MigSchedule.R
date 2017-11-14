@@ -393,10 +393,11 @@ if(collapseSites == TRUE){
     lonlat$newSites[which(lonlat$site == i)] <- (i-1)
     }
   }
-  new.sites <- max(lonlat$newSites,na.rm = TRUE)
 
   newSites <- unique(lonlat$newSites)
   newSites <- newSites[!is.na(newSites)]
+
+  new.sites <- length(newSites)
 
   movements.new <- v.new <-  vector('list',new.sites)
 
