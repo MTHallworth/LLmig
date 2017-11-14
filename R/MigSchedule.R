@@ -319,6 +319,9 @@ MigSchedule <- function(MCMC = S,
 
   lonlat$site <- tmp$site
 
+  sites <- unique(lonlat$site)
+  sites <- sites[!is.na(sites)]
+
   n.sites <- max(lonlat$site,na.rm = TRUE)
 
   movements <- v <-  vector('list',n.sites)
