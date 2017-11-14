@@ -386,7 +386,7 @@ MigSchedule <- function(MCMC = S,
 if(collapseSites == TRUE){
   lonlat$newSites <- lonlat$site
   for(i in 2:n.sites){
-    inPrev <- raster::extract(sp::SpatialPoints(cbind(median.stationary.lon[i],median.stationary.lat[i]), sp::CRS(WGS84)),movements[[i-1]])
+    inPrev <- raster::extract(movements[[i-1]],sp::SpatialPoints(cbind(median.stationary.lon[i],median.stationary.lat[i]), sp::CRS(WGS84)))
     if(!is.na(inPrev)){
     lonlat$newSites[which(lonlat$site == i)] <- i-1
     }
