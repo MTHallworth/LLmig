@@ -387,12 +387,14 @@ if(collapseSites == TRUE){
   cat("\n Collapsing sites ....\n")
 
   lonlat$newSites <- lonlat$site
+if(max(lonlat$newSites,na.rm = TRUE)!=1){
   for(i in 2:n.sites){
     inPrev <- raster::extract(movements[[i-1]],sp::SpatialPoints(cbind(median.stationary.lon[i],median.stationary.lat[i]), sp::CRS(WGS84)))
     if(!is.na(inPrev)){
     lonlat$newSites[which(lonlat$site == i)] <- (i-1)
     }
   }
+}
 
   newSites <- unique(lonlat$newSites)
   newSites <- newSites[!is.na(newSites)]
