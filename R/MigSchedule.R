@@ -596,7 +596,7 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
 
   results <- list(DailyPositions = lonlat,
                   Schedule = movementResult,
-                  movements = movements)
+                  movements = ifelse(collapseSites == FALSE, movements, movements.new))
 
   return(results)
 
