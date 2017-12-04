@@ -469,6 +469,8 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
                                  distance.km = c(NA,distance.km),
                                  country = loc,
                                  state = win.state)
+								 
+	movements <- movements
   }else{
     movementResult <- data.frame(arrival.date = arrival.date.new,
                                  departure.date = depart.date.new,
@@ -481,6 +483,8 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
                                  distance.km = c(NA,distance.km.new),
                                  country = loc.new,
                                  state = win.state.new)
+								 
+	movements <- movements.new
   }
   movementResult$duration <-as.Date(movementResult$departure.date) - as.Date(movementResult$arrival.date)
 
@@ -596,7 +600,7 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
 
   results <- list(DailyPositions = lonlat,
                   Schedule = movementResult,
-                  movements = ifelse(collapseSites == FALSE, movements, movements.new))
+                  movements = movements)
 
   return(results)
 
