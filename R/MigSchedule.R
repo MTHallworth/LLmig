@@ -536,7 +536,7 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
     plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
          add = TRUE)
 
-    for(i in 1:n.sites){
+    for(i in 1:raster::nlayers(movements)){
       plot(movements[[i]],
            col = rev(sp::bpy.colors(100)),
            add = TRUE,
