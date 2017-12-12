@@ -1,11 +1,25 @@
 Package: LLmig
 Type: Package
-Title: What the Package Does (Title Case)
+Title: LLmig: Migration schedules from Light-level geolocators
 Version: 0.1.0
-Author: M.T.Hallworth
-Maintainer: M.T.Hallworth <mhallworth@gmail.com>
-Description: MTH's personal geolocator package
-License: 
+Authors@R: person("Michael T. Hallworth",email = "mhallworth@gmail.com", role = c("cre","aut"))
+Description: The LLmig package uses the output from the estelleMetropolis function in the SGAT package
+             to determine migration schedules from light-level geolocator data. Stationary periods are
+             determined using natural changes in longitude and latitude through the use of changepoint 
+             analysis. Stationary periods encompass location uncertainty associated with light-level 
+             geolocation. 
+License: GPL (>=3)
 Encoding: UTF-8
+Imports:
+    raster,
+    geosphere,
+    sp,
+    changepoint,
+    rgeos,
+    SGAT,
+    zoo,
+    Hmisc,
+    maptools,
+    methods
 LazyData: true
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

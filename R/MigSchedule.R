@@ -3,23 +3,26 @@
 #' @param MCMC a slices object.
 #' @param \code{prob} probability estimate to return for daily positions
 #' @param \code{mig.quantile} probability for determining movement periods
-#' @param \code{stationary.periods} data.frame with two columns of Dates in \code{"%Y-%m-%d"} - first column = start, second column = end
-#' @param \code{stationary.duration} minimum number of stationary days to consider stationary periods - default = 2
-#' @param \code{rm.lat.equinox} logical remove dates from consideration around equinox?
+#' @param \code{stationary.periods} data.frame with two columns of Dates in \item{"%Y-%m-%d"} - first column = start, second column = end
+#' @param \code{stationary.duration} minimum number of stationary days to consider stationary periods, default == 2
+#' @param \code{rm.lat.equinox} logical remove dates from consideration around equinox
 #' @param \code{days.omit} integer how many days on either side to remove if \code{rm.lat.equniox == TRUE}
+#' @param \code{collapseSites} logical merge stationary sites if the previous median location falls within subsequent stationary site
 #' @param \code{progress} logical show progress bar
 #' @param \code{plot} logical plot results upon completion
 #' @param \code{plot.legend} logical plot legend with dates on figure
 #' @return \code{list} DailyPositions - geographically weighted mean and associated errors
 #'                     Schedule - arrival and departure dates of stops
 #'                     movements \code{rasterStack} of Schedule.
+#'
+#'
 #' @export
 
-MigSchedule <- function(MCMC = S,
+MigSchedule <- function(MCMC,
                         prob = 0.95,
-                        mig.quantile = 0.5,
-                        stationary.periods = stationary.periods,
-                        stationary.duration = 1,
+                        mig.quantile = 0.95,
+                        stationary.periods = NULL,
+                        stationary.duration = 2,
                         collapseSites = FALSE,
                         rm.lat.equinox = FALSE,
                         days.omit = 5,
@@ -82,13 +85,13 @@ MigSchedule <- function(MCMC = S,
   # create progress bar
 
   if(progress){
-    pb <- txtProgressBar(min = 0, max = num.days, style = 3)
+    pb <- utils::txtProgressBar(min = 0, max = num.days, style = 3)
   }
 
   for(i in 1:num.days){
 
     if(progress){
-      setTxtProgressBar(pb, i)
+      utils::setTxtProgressBar(pb, i)
     }
 
     days[[i]]<-SGAT::slice(MCMC,k = ks[i])
@@ -469,7 +472,7 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
                                  distance.km = c(NA,distance.km),
                                  country = loc,
                                  state = win.state)
-								 
+
 	movements <- movements
   }else{
     movementResult <- data.frame(arrival.date = arrival.date.new,
@@ -483,7 +486,7 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
                                  distance.km = c(NA,distance.km.new),
                                  country = loc.new,
                                  state = win.state.new)
-								 
+
 	movements <- movements.new
   }
   movementResult$duration <-as.Date(movementResult$departure.date) - as.Date(movementResult$arrival.date)
