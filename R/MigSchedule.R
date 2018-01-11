@@ -8,6 +8,8 @@
 #' @param \code{rm.lat.equinox} logical remove dates from consideration around equinox
 #' @param \code{days.omit} integer how many days on either side to remove if \code{rm.lat.equniox == TRUE}
 #' @param \code{collapseSites} logical merge stationary sites if the previous median location falls within subsequent stationary site
+#' @param \code{rm.suspected.outliers} logical flag and remove any migratory movement not consistent with migratory path
+#' @param \code{outlier.lat.tol} integer latitudinal tolerance for suspected outlier removal if \code{rm.suspected.outliers == TRUE}
 #' @param \code{progress} logical show progress bar
 #' @param \code{plot} logical plot results upon completion
 #' @param \code{plot.legend} logical plot legend with dates on figure
@@ -23,9 +25,11 @@ MigSchedule <- function(MCMC,
                         mig.quantile = 0.95,
                         stationary.periods = NULL,
                         stationary.duration = 2,
-                        collapseSites = FALSE,
                         rm.lat.equinox = FALSE,
                         days.omit = 5,
+						collapseSites = FALSE,
+						rm.suspected.outliers = FALSE,
+						outlier.lat.tol = 5,
                         progress = TRUE,
                         plot = TRUE,
                         plot.legend = TRUE){
