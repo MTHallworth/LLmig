@@ -17,7 +17,30 @@
 #'                     Schedule - arrival and departure dates of stops
 #'                     movements \code{rasterStack} of Schedule.
 #'
+#' @example \dontrun{
+#'   # fit = MCMC output from SGAT package 
+#'   
+#'   # Make empty raster to summarize results
+#'   r <- raster::raster(res = c(0.25,0.25),
+#'                       xmn=-90,
+#'                        xmx=-20,
+#'                        ymn=75,
+#'                        ymx=25) 
+#'                      
+#'   S <- SGAT::slices(type="intermediate",
+#'                     breaks="day",
+#'                     mcmc=fit,
+#'                     grid=r)
 #'
+#'
+#' FTfly <- LLmig::MigSchedule(MCMC = S, 
+#'                                mig.quantile = 0.95,
+#'                                stationary.periods = stationary.periods,
+#'                                stationary.duration = 1,
+#'                                prob = 0.95,
+#'                                rm.lat.equinox = FALSE,
+#'                                collapseSites = TRUE)
+#'    }
 #' @export
 
 MigSchedule <- function(MCMC,
