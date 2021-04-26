@@ -517,11 +517,11 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
 
     par(mfrow = c(2,2), mar = c(1,1,3,1))
     # Plot Daily Location estimates #
-    plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
+    raster::plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
          pch = 19,
          col = colors1,
          main = "Daily Locations")
-    plot(wrld_simpl,add = TRUE,col = "gray88")
+    raster::plot(wrld_simpl,add = TRUE,col = "gray88")
     if(plot.legend){
       legend("bottomleft",
              legend = c("Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"),
@@ -530,9 +530,9 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
              cex = 0.8,
              bty = "n")
     }
-    plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
+    raster::plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
          add = TRUE)
-    plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
+    raster::plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
          pch = 19,
          col = colors1,
          add = TRUE)
@@ -541,14 +541,14 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
     # Plot Stop-over locations #
     cols <- sp::bpy.colors(nrow(movementResult))
 
-    plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
+    raster::plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
          pch = 19,
          main = "Stop-over sites")
-    plot(wrld_simpl,
+    raster::plot(wrld_simpl,
          add = TRUE,
          col = "gray88")
 
-    plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
+    raster::plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
          add = TRUE)
 
     for(i in 1:raster::nlayers(movements)){
@@ -558,12 +558,12 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
            legend = FALSE)
     }
 
-    plot(sp::SpatialPoints(cbind(median.stationary.lon,median.stationary.lat)),
+    raster::plot(sp::SpatialPoints(cbind(median.stationary.lon,median.stationary.lat)),
          pch = 19,
          col = cols,
          add = TRUE)
 
-    plot(wrld_simpl,add = TRUE)
+    raster::plot(wrld_simpl,add = TRUE)
 
     # Plot legend if wanted #
     if(plot.legend){
