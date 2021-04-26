@@ -370,7 +370,7 @@ MigSchedule <- function(MCMC,
   state<-raster::getData('GADM', country='USA', level=1)
 
  # WGS84 <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
-WGS84 <- "GEOGCS["WGS 84",
+WGS84 <- 'GEOGCS["WGS 84",
     DATUM["WGS_1984",
         SPHEROID["WGS 84",6378137,298.257223563,
             AUTHORITY["EPSG","7030"]],
@@ -379,7 +379,7 @@ WGS84 <- "GEOGCS["WGS 84",
         AUTHORITY["EPSG","8901"]],
     UNIT["degree",0.01745329251994328,
         AUTHORITY["EPSG","9122"]],
-    AUTHORITY["EPSG","4326"]]"
+    AUTHORITY["EPSG","4326"]]'
 	
   state <- sp::spTransform(state, sp::CRS(WGS84))
 
