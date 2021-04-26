@@ -552,7 +552,7 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
          add = TRUE)
 
     for(i in 1:raster::nlayers(movements)){
-      plot(movements[[i]],
+      raster::plot(movements[[i]],
            col = rev(sp::bpy.colors(100)),
            add = TRUE,
            legend = FALSE)
