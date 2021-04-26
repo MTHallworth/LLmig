@@ -367,6 +367,7 @@ MigSchedule <- function(MCMC,
                              segments = TRUE)
 
   data(wrld_simpl, package = "maptools")
+  
   state<-raster::getData('GADM', country='USA', level=1)
 
  # WGS84 <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
@@ -380,9 +381,9 @@ WGS84 <- 'GEOGCS["WGS 84",
     UNIT["degree",0.01745329251994328,
         AUTHORITY["EPSG","9122"]],
     AUTHORITY["EPSG","4326"]]'
-	
+ 
   state <- sp::spTransform(state, sp::CRS(WGS84))
-
+  crs(wrld_simpl) <- WGS84
   loc <- sp::over(sp::SpatialPoints(cbind(median.stationary.lon,median.stationary.lat), sp::CRS(WGS84)),wrld_simpl)$NAME
   loc <- droplevels(loc)
 
@@ -458,7 +459,8 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
   #WGS84 <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
 
   state <- sp::spTransform(state, sp::CRS(WGS84))
-
+  crs(wrld_simpl) <- WGS84
+  
   loc.new <- sp::over(sp::SpatialPoints(cbind(median.stationary.lon.new,median.stationary.lat.new), sp::CRS(WGS84)),wrld_simpl)$NAME
   loc.new <- droplevels(loc.new)
 
