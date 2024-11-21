@@ -51,7 +51,9 @@ MigSchedule <- function(MCMC,
   Date <- Date[ks]
 
   years <- unique(format(as.Date(Date),"%Y"))
-
+ 
+  # take out any NA in years # 
+  years <- years[!is.na(years)]
 
   fall.equinox <- paste0(seq.Date(from = as.Date(paste0(years[1L],"-09-",16-days.omit)),
                                   to = as.Date(paste0(years[1L],"-09-",16+days.omit)), by = 1))
@@ -98,37 +100,41 @@ MigSchedule <- function(MCMC,
 
     if(class(days[[i]]) == "RasterLayer"){
 
-      days[[i]][days[[i]]< quantile(raster::values(days[[i]]),na.rm = TRUE, probs = prob)]<-NA
-      days2pts[[i]]<-raster::rasterToPoints(days[[i]])
+    # convert to terra for faster processing # 
+      days[[i]] <- terra::rast(days[[i]]) 
 
-      lon[i]<-Hmisc::wtd.quantile(days2pts[[i]][,1],
+
+      days[[i]][days[[i]]<quantile(terra::values(days[[i]]),na.rm = TRUE, probs = prob)]<-NA
+      days2pts[[i]]<-terra::as.points(days[[i]])
+
+      lon[i]<-Hmisc::wtd.quantile(terra::crds(days2pts[[i]])[,1],
                                   probs = 0.5,
-                                  weight = days2pts[[i]][,3],
+                                  weight = days2pts[[i]]$layer,
                                   na.rm = TRUE)
 
-      lon.LCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,1],
+      lon.LCI[i] <- Hmisc::wtd.quantile(terra::crds(days2pts[[i]])[,1],
                                         probs = 0.025,
-                                        weights = days2pts[[i]][,3],
+                                        weights = days2pts[[i]]$layer,
                                         na.rm = TRUE)
 
-      lon.UCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,1],
+      lon.UCI[i] <- Hmisc::wtd.quantile(terra::crds(days2pts[[i]])[,1],
                                         probs = 0.975,
-                                        weights = days2pts[[i]][,3],
+                                        weights = days2pts[[i]]$layer,
                                         na.rm = TRUE)
 
-      lat[i]<- Hmisc::wtd.quantile(days2pts[[i]][,2],
+      lat[i]<- Hmisc::wtd.quantile(terra::crds(days2pts[[i]])[,2],
                                    probs = 0.5,
-                                   weight = days2pts[[i]][,3],
+                                   weight = days2pts[[i]]$layer,
                                    na.rm = TRUE)
 
-      lat.LCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,2],
+      lat.LCI[i] <- Hmisc::wtd.quantile(terra::crds(days2pts[[i]])[,2],
                                         probs = 0.025,
-                                        weights = days2pts[[i]][,3],
+                                        weights = days2pts[[i]]$layer,
                                         na.rm = TRUE)
 
-      lat.UCI[i] <- Hmisc::wtd.quantile(days2pts[[i]][,2],
+      lat.UCI[i] <- Hmisc::wtd.quantile(terra::crds(days2pts[[i]])[,2],
                                         probs = 0.975,
-                                        weights = days2pts[[i]][,3],
+                                        weights = days2pts[[i]]$layer,
                                         na.rm = TRUE)
     }
     else{
@@ -163,12 +169,15 @@ MigSchedule <- function(MCMC,
                      lat.UCI = lat.UCI,
                      Distance.traveled = rep(NA,length(Date)))
 
+  lonlat_sf <- sf::st_as_sf(lonlat,coords = c("Median.long","Median.lat"), crs = 4326)
+  
+  # Create a list for each consecutive day pairs #
+  consecutive_days <- lapply(1:(nrow(lonlat_sf)-1),function(x){c(lonlat_sf[x,]$geometry,lonlat_sf[x+1,]$geometry)})
+  
+  # Calculate the distance in meters for the median locations #
+  distances <- sapply(consecutive_days,function(x){sf::st_distance(x[1,],x[2,])})
 
-  distances <- sp::spDists(cbind(lonlat$Median.long,lonlat$Median.lat),
-                           longlat = TRUE,
-                           segments = TRUE)
-
-  lonlat$Distance.traveled <- c(NA,distances)
+  lonlat$Distance.traveled <- c(NA,distances/1000)
 
   cat("\n Determining stationary locations ....\n")
 
@@ -261,12 +270,13 @@ MigSchedule <- function(MCMC,
       # create raster of stationary period
       stat.rasters[[i]] <- SGAT::slice(MCMC, k = stat.periods[[i]])
 
-      # keep the 95% CI
-      stat.rasters[[i]][stat.rasters[[i]] < quantile(raster::values(stat.rasters[[i]]), probs = 0.95,na.rm = TRUE)] <- NA
+      stat.rasters[[i]] <- terra::rast(stat.rasters[[i]])
 
-      stat.extract[[i]] <- raster::extract(stat.rasters[[i]], # raster
-                                           sp::SpatialPoints(cbind(lonlat$Median.long,lonlat$Median.lat)), #spatialpoints
-                                           method = "simple")
+      # keep the 95% CI
+      stat.rasters[[i]][stat.rasters[[i]] < quantile(terra::values(stat.rasters[[i]]), probs = 0.95,na.rm = TRUE)] <- NA
+
+      stat.extract[[i]] <- terra::extract(stat.rasters[[i]], # raster
+                                           cbind(lonlat$Median.long,lonlat$Median.lat))
 
       tmp$longProb[which(!is.na(stat.extract[[i]]))] <- 1
       tmp$latProb[which(!is.na(stat.extract[[i]]))] <- 1
@@ -338,60 +348,64 @@ MigSchedule <- function(MCMC,
     movements[[i]]<- SGAT::slice(MCMC,
                                  k = which(lonlat$site == sites[i]))
 
+    movements[[i]] <- terra::rast(movements[[i]])
+
     if(!is.na(prob)){
-      movements[[i]][movements[[i]]< quantile(raster::values(movements[[i]]),probs = prob,na.rm = TRUE)] <- NA
+      movements[[i]][movements[[i]]< quantile(terra::values(movements[[i]]),probs = prob,na.rm = TRUE)] <- NA
     }
 
-    movements[[i]] <- movements[[i]]/raster::cellStats(movements[[i]],max, na.rm = TRUE)
+    movements[[i]] <- movements[[i]]/terra::global(movements[[i]],max, na.rm = TRUE)$max
 
-    arrival.date[i] <- substr(sliceInterval(MCMC,k = which(lonlat$site == sites[i]))[1],start = 1, stop = 10)
-    depart.date[i] <- substr(sliceInterval(MCMC,k = which(lonlat$site == sites[i]))[2],start = 1, stop = 10)
+    arrival.date[i] <- substr(SGAT::sliceInterval(MCMC,k = which(lonlat$site == sites[i]))[1],start = 1, stop = 10)
+    depart.date[i] <- substr(SGAT::sliceInterval(MCMC,k = which(lonlat$site == sites[i]))[2],start = 1, stop = 10)
   }
 
-  movements<-raster::stack(movements)
+  movements<- do.call(c,movements)
 
   names(movements) <- paste0(arrival.date,"_",depart.date)
 
-  for(i in 1:raster::nlayers(movements)){
-    v[[i]]<-raster::rasterToPoints(movements[[i]])
-    median.stationary.lon[i]<-Hmisc::wtd.quantile(v[[i]][,1],probs= 0.5,weight = v[[i]][,3],na.rm = TRUE)
-    LCI.stat.lon[i]<-Hmisc::wtd.quantile(v[[i]][,1],probs = 0.025, weights = v[[i]][,3])
-    UCI.stat.lon[i]<-Hmisc::wtd.quantile(v[[i]][,1],probs = 0.975, weights = v[[i]][,3])
-    median.stationary.lat[i]<-Hmisc::wtd.quantile(v[[i]][,2],probs = 0.5,weight = v[[i]][,3],na.rm = TRUE)
-    LCI.stat.lat[i]<-Hmisc::wtd.quantile(v[[i]][,2],probs = 0.025, weights = v[[i]][,3])
-    UCI.stat.lat[i]<-Hmisc::wtd.quantile(v[[i]][,2],probs = 0.975, weights = v[[i]][,3])
+  for(i in 1:terra::nlyr(movements)){
+    v[[i]]<-terra::as.points(movements[[i]])
+    median.stationary.lon[i]<-Hmisc::wtd.quantile(terra::crds(v[[i]])[,1],probs= 0.5,weight = v[[i]]$layer,na.rm = TRUE)
+    LCI.stat.lon[i]<-Hmisc::wtd.quantile(terra::crds(v[[i]])[,1],probs = 0.025, weights = v[[i]]$layer)
+    UCI.stat.lon[i]<-Hmisc::wtd.quantile(terra::crds(v[[i]])[,1],probs = 0.975, weights = v[[i]]$layer)
+    median.stationary.lat[i]<-Hmisc::wtd.quantile(terra::crds(v[[i]])[,2],probs = 0.5,weight = v[[i]]$layer,na.rm = TRUE)
+    LCI.stat.lat[i]<-Hmisc::wtd.quantile(terra::crds(v[[i]])[,2],probs = 0.025, weights = v[[i]]$layer)
+    UCI.stat.lat[i]<-Hmisc::wtd.quantile(terra::crds(v[[i]])[,2],probs = 0.975, weights = v[[i]]$layer)
   }
-
-  distance.km <- sp::spDists(cbind(median.stationary.lon,median.stationary.lat),
-                             longlat = TRUE,
-                             segments = TRUE)
-
-  data(wrld_simpl, package = "maptools")
-  
-  state<-raster::getData('GADM', country='USA', level=1)
-
- # WGS84 <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
-WGS84 <- 'GEOGCS["WGS 84",
-    DATUM["WGS_1984",
-        SPHEROID["WGS 84",6378137,298.257223563,
-            AUTHORITY["EPSG","7030"]],
-        AUTHORITY["EPSG","6326"]],
-    PRIMEM["Greenwich",0,
-        AUTHORITY["EPSG","8901"]],
-    UNIT["degree",0.01745329251994328,
-        AUTHORITY["EPSG","9122"]],
-    AUTHORITY["EPSG","4326"]]'
  
-  state <- sp::spTransform(state, sp::CRS(WGS84))
-  crs(wrld_simpl) <- WGS84
-  loc <- sp::over(sp::SpatialPoints(cbind(median.stationary.lon,median.stationary.lat), sp::CRS(WGS84)),wrld_simpl)$NAME
-  loc <- droplevels(loc)
+  stationary_locs_sf <- sf::st_as_sf(data.frame(lon = median.stationary.lon,
+                                             lat = median.stationary.lat,
+                                             LCI.lon = LCI.stat.lon, 
+                                             UCI.lon = UCI.stat.lon,
+                                             LCI.lat = LCI.stat.lat,
+                                             UCI.lat = UCI.stat.lat),
+                                  coords = c("lon","lat"),
+                                  crs = 4326)
+
+  # Create a list for each consecutive day pairs #
+  consecutive_stops <- lapply(1:(nrow(stationary_locs_sf)-1),function(x){c(stationary_locs_sf[x,]$geometry,stationary_locs_sf[x+1,]$geometry)})
+  
+  # Calculate the distance in meters for the median locations #
+  distance.km <- sapply(consecutive_stops,function(x){sf::st_distance(x[1,],x[2,])})/1000
+
+  # geom boundaries # 
+  boundaries <- rnaturalearth::ne_countries(scale = "medium",returnclass = "sf")
+  boundaries <- sf::st_make_valid(boundaries)
+
+  state <- rnaturalearth::ne_states(country = "United States of America")
+
+  loc_int <- suppressWarnings(sf::st_intersects(stationary_locs_sf,boundaries))
+   
+  loc_int[sapply(loc_int, function(x) length(x)==0)] <- NA
+
+  loc <- boundaries[unlist(loc_int),]$"name"
 
   win.state <- rep(NA,length(loc))
 
   for(i in 1:length(loc)){
-    win.state[i] <- ifelse(loc[i] == "United States",
-                           sp::over(sp::SpatialPoints(cbind(median.stationary.lon[i],median.stationary.lat[i]), sp::CRS(WGS84)),state)$NAME_1,
+    win.state[i] <- ifelse(loc[i] == "United States of America",
+                           suppressWarnings(sf::st_intersection(stationary_locs_sf[i,],state)$name),
                            "NA")
   }
 
@@ -403,7 +417,7 @@ if(collapseSites == TRUE){
   lonlat$newSites <- lonlat$site
 if(max(lonlat$newSites,na.rm = TRUE)!=1){
   for(i in 2:n.sites){
-    inPrev <- raster::extract(movements[[i-1]],sp::SpatialPoints(cbind(median.stationary.lon[i],median.stationary.lat[i]), sp::CRS(WGS84)))
+    inPrev <- terra::extract(movements[[i-1]],cbind(median.stationary.lon[i],median.stationary.lat[i]))
     if(!is.na(inPrev)){
     lonlat$newSites[which(lonlat$site == i)] <- (i-1)
     }
@@ -422,55 +436,69 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
   LCI.stat.lon.new <- UCI.stat.lon.new <- LCI.stat.lat.new <- UCI.stat.lat.new <- rep(NA,new.sites)
 
   for(i in 1:new.sites){
-    movements.new[[i]]<- SGAT::slice(MCMC,
-                                 k = which(lonlat$newSites == newSites[i]))
+    movements.new[[i]]<- terra::rast(SGAT::slice(MCMC,
+                                     k = which(lonlat$newSites == newSites[i])))
+  
 
     if(!is.na(prob)){
-      movements.new[[i]][movements.new[[i]]< quantile(raster::values(movements.new[[i]]),probs = prob,na.rm = TRUE)] <- NA
+      movements.new[[i]][movements.new[[i]]< quantile(terra::values(movements.new[[i]]),probs = prob,na.rm = TRUE)] <- NA
     }
 
-    movements.new[[i]] <- movements.new[[i]]/raster::cellStats(movements.new[[i]],max, na.rm = TRUE)
+    movements.new[[i]] <- movements.new[[i]]/terra::global(movements.new[[i]],max, na.rm = TRUE)$max
 
-    arrival.date.new[i] <- substr(sliceInterval(MCMC,k = which(lonlat$newSites == newSites[i]))[1],start = 1, stop = 10)
-    depart.date.new[i] <- substr(sliceInterval(MCMC,k = which(lonlat$newSites == newSites[i]))[2],start = 1, stop = 10)
+    arrival.date.new[i] <- substr(SGAT::sliceInterval(MCMC,k = which(lonlat$newSites == newSites[i]))[1],start = 1, stop = 10)
+    depart.date.new[i] <- substr(SGAT::sliceInterval(MCMC,k = which(lonlat$newSites == newSites[i]))[2],start = 1, stop = 10)
   }
 
-  movements.new<-raster::stack(movements.new)
+  movements.new<- do.call(c,movements.new)
 
   names(movements.new) <- paste0(arrival.date.new,"_",depart.date.new)
 
-  for(i in 1:raster::nlayers(movements.new)){
-    v.new[[i]]<-raster::rasterToPoints(movements.new[[i]])
-    median.stationary.lon.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,1],probs= 0.5,weight = v.new[[i]][,3],na.rm = TRUE)
-    LCI.stat.lon.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,1],probs = 0.025, weights = v.new[[i]][,3])
-    UCI.stat.lon.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,1],probs = 0.975, weights = v.new[[i]][,3])
-    median.stationary.lat.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,2],probs = 0.5,weight = v.new[[i]][,3],na.rm = TRUE)
-    LCI.stat.lat.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,2],probs = 0.025, weights = v.new[[i]][,3])
-    UCI.stat.lat.new[i]<-Hmisc::wtd.quantile(v.new[[i]][,2],probs = 0.975, weights = v.new[[i]][,3])
+  for(i in 1:terra::nlyr(movements.new)){
+    v.new[[i]]<-terra::as.points(movements.new[[i]])
+    median.stationary.lon.new[i]<-Hmisc::wtd.quantile(terra::crds(v.new[[i]])[,1],probs= 0.5,weight = v.new[[i]]$layer,na.rm = TRUE)
+    LCI.stat.lon.new[i]<-Hmisc::wtd.quantile(terra::crds(v.new[[i]])[,1],probs = 0.025, weights =  v.new[[i]]$layer)
+    UCI.stat.lon.new[i]<-Hmisc::wtd.quantile(terra::crds(v.new[[i]])[,1],probs = 0.975, weights =  v.new[[i]]$layer)
+    median.stationary.lat.new[i]<-Hmisc::wtd.quantile(terra::crds(v.new[[i]])[,2],probs = 0.5,weight =  v.new[[i]]$layer,na.rm = TRUE)
+    LCI.stat.lat.new[i]<-Hmisc::wtd.quantile(terra::crds(v.new[[i]])[,2],probs = 0.025, weights =  v.new[[i]]$layer)
+    UCI.stat.lat.new[i]<-Hmisc::wtd.quantile(terra::crds(v.new[[i]])[,2],probs = 0.975, weights =  v.new[[i]]$layer)
   }
 
-  distance.km.new <- sp::spDists(cbind(median.stationary.lon.new,median.stationary.lat.new),
-                             longlat = TRUE,
-                             segments = TRUE)
+    stationary_locs_sf_new <- sf::st_as_sf(data.frame(lon = median.stationary.lon.new,
+                                             lat = median.stationary.lat.new,
+                                             LCI.lon = LCI.stat.lon.new, 
+                                             UCI.lon = UCI.stat.lon.new,
+                                             LCI.lat = LCI.stat.lat.new,
+                                             UCI.lat = UCI.stat.lat.new),
+                                  coords = c("lon","lat"),
+                                  crs = 4326)
 
-  data(wrld_simpl, package = "maptools")
-  state<-raster::getData('GADM', country='USA', level=1)
-
-  #WGS84 <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"
-
-  state <- sp::spTransform(state, sp::CRS(WGS84))
-  crs(wrld_simpl) <- WGS84
+  # Create a list for each consecutive day pairs #
+  consecutive_stops_new <- lapply(1:(nrow(stationary_locs_sf_new)-1),function(x){c(stationary_locs_sf_new[x,]$geometry,stationary_locs_sf_new[x+1,]$geometry)})
   
-  loc.new <- sp::over(sp::SpatialPoints(cbind(median.stationary.lon.new,median.stationary.lat.new), sp::CRS(WGS84)),wrld_simpl)$NAME
-  loc.new <- droplevels(loc.new)
+  # Calculate the distance in meters for the median locations #
+  distance.km.new <- sapply(consecutive_stops_new,function(x){sf::st_distance(x[1,],x[2,])})/1000
+  
+   # geom boundaries # 
+  boundaries <- rnaturalearth::ne_countries(scale = "medium",returnclass = "sf")
+  boundaries <- sf::st_make_valid(boundaries)
+
+  state <- rnaturalearth::ne_states(country = "United States of America")
+ 
+  loc_int_new <- suppressWarnings(sf::st_intersects(stationary_locs_sf_new,boundaries))
+   
+  loc_int_new[sapply(loc_int_new, function(x) length(x)==0)] <- NA
+
+  loc.new <- boundaries[unlist(loc_int_new),]$"name"
 
   win.state.new <- rep(NA,length(loc.new))
 
   for(i in 1:length(loc.new)){
-    win.state.new[i] <- ifelse(loc.new[i] == "United States",
-                           sp::over(sp::SpatialPoints(cbind(median.stationary.lon.new[i],median.stationary.lat.new[i]), sp::CRS(WGS84)),state)$NAME_1,
+    win.state.new[i] <- ifelse(loc.new[i] == "United States of America",
+                           suppressWarnings(sf::st_intersection(stationary_locs_sf_new[i,],state)$name),
                            "NA")
   }
+
 }
   if(collapseSites == FALSE){
     movementResult <- data.frame(arrival.date = arrival.date,
@@ -505,11 +533,9 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
 
   if(plot == TRUE){
     cat("\n Plotting the results \n")
-    data(wrld_simpl, package = "maptools")
-
 
     month <- format(as.Date(Date),"%m")
-    col.dat <- data.frame(color1 = rev(sp::bpy.colors(n = 12,alpha = 0.4)),
+    col.dat <- data.frame(color1 = rev(viridis::viridis(n = 12,alpha = 0.4)),
                           month = sprintf("%02d",1:12))
 
     colors1 <- as.character(col.dat[match(month,col.dat$month),1])
@@ -517,11 +543,11 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
 
     par(mfrow = c(2,2), mar = c(1,1,3,1))
     # Plot Daily Location estimates #
-    raster::plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
-         pch = 19,
-         col = colors1,
+    daily_locations <- sf::st_as_sf(lonlat,coords = c("Median.long","Median.lat"), crs = 4326)
+
+    plot(daily_locations$geometry,
          main = "Daily Locations")
-    raster::plot(wrld_simpl,add = TRUE,col = "gray88")
+    plot(boundaries$geometry,add = TRUE,col = "gray88")
     if(plot.legend){
       legend("bottomleft",
              legend = c("Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"),
@@ -530,40 +556,39 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
              cex = 0.8,
              bty = "n")
     }
-    raster::plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
-         add = TRUE)
-    raster::plot(sp::SpatialPoints(cbind(lonlat$Median.lon,lonlat$Median.lat)),
+   plot(sf::st_as_sf(terra::as.lines(terra::vect(daily_locations)))$geometry,add = TRUE)
+   plot(daily_locations$geometry,
          pch = 19,
          col = colors1,
-         add = TRUE)
+         add= TRUE)
     box()
 
     # Plot Stop-over locations #
-    cols <- sp::bpy.colors(nrow(movementResult))
+    cols <- viridis::viridis(n = nrow(movementResult))
 
-    raster::plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
-         pch = 19,
+    plot(sf::st_as_sf(terra::as.lines(terra::vect(daily_locations)))$geometry,
          main = "Stop-over sites")
-    raster::plot(wrld_simpl,
+    plot(boundaries$geometry,
          add = TRUE,
          col = "gray88")
-
-    raster::plot(raster::spLines(cbind(lonlat$Median.lon,lonlat$Median.lat)),
+    plot(sf::st_as_sf(terra::as.lines(terra::vect(daily_locations)))$geometry,
          add = TRUE)
 
-    for(i in 1:raster::nlayers(movements)){
-      raster::plot(movements[[i]],
-           col = rev(sp::bpy.colors(100)),
+    for(i in 1:terra::nlyr(movements)){
+       terra::plot(movements[[i]],
+           col = viridis::viridis(n = 100, direction = -1),
            add = TRUE,
            legend = FALSE)
     }
+    
+    med_locs <- sf::st_as_sf(movementResult, coords = c("median.lon","median.lat"), crs = 4326)
 
-    raster::plot(sp::SpatialPoints(cbind(median.stationary.lon,median.stationary.lat)),
+    plot(med_locs$geometry,
          pch = 19,
          col = cols,
          add = TRUE)
 
-    raster::plot(wrld_simpl,add = TRUE)
+    plot(boundaries$geometry,add = TRUE)
 
     # Plot legend if wanted #
     if(plot.legend){
@@ -578,36 +603,36 @@ if(max(lonlat$newSites,na.rm = TRUE)!=1){
 
     # Mean weighted latitude #
     par(mar = c(4,4,4,4),bty = "l")
-    plot(lonlat$Median.lat ~ lonlat$Date,
+    plot(lonlat$Median.lat ~ as.POSIXct(lonlat$Date,"%Y-%m-%d"),
          type = "l",
          ylab = "Weighted Median Latitude",
          xlab = "Date",
          yaxt = "n",
          xaxt = "n")
-    polygon(x=c(lonlat$Date,rev(lonlat$Date)),
+    polygon(x=c(as.POSIXct(lonlat$Date,"%Y-%m-%d"),rev(as.POSIXct(lonlat$Date,"%Y-%m-%d"))),
             y=c(lonlat$lat.LCI,rev(lonlat$lat.UCI)),
             border="gray",
             col="gray")
-    points(lonlat$Date,lonlat$Median.lat,type = "l")
+    points(as.POSIXct(lonlat$Date,"%Y-%m-%d"),lonlat$Median.lat,type = "l")
     axis(2,las=2)
     dayplot <- seq(1,length(lonlat$Date),30)
-    axis(1, at = lonlat$Date[dayplot], labels = lonlat$Date[dayplot])
+    axis(1, at = as.POSIXct(lonlat$Date[dayplot],format = "%Y-%m-%d"), labels = lonlat$Date[dayplot])
 
 
-    plot(lonlat$Median.long ~ lonlat$Date,
+    plot(lonlat$Median.long ~ as.POSIXct(lonlat$Date,"%Y-%m-%d"),
          type = "l",
          ylab = "Weighted Median Longitude",
          xlab = "Date",
          yaxt = "n",
          xaxt = "n")
-    polygon(x=c(lonlat$Date,rev(lonlat$Date)),
+    polygon(x=c(as.POSIXct(lonlat$Date,"%Y-%m-%d"),rev(as.POSIXct(lonlat$Date,"%Y-%m-%d"))),
             y=c(lonlat$lon.LCI,rev(lonlat$lon.UCI)),
             border="gray",
             col="gray")
-    points(lonlat$Date,lonlat$Median.long,type="l")
+    points(as.POSIXct(lonlat$Date,"%Y-%m-%d"),lonlat$Median.long,type="l")
     axis(2,las=2)
     dayplot <- seq(1,length(lonlat$Date),30)
-    axis(1, at = lonlat$Date[dayplot], labels = lonlat$Date[dayplot])
+    axis(1, at = as.POSIXct(lonlat$Date[dayplot],"%Y-%m-%d"), labels = lonlat$Date[dayplot])
 
   }
 
